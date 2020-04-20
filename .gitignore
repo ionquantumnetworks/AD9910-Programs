@@ -1,5 +1,5 @@
 *.sln
 *.vcxprog
 *.vcxproj.filters
-*.vcxproj.user
-*.json
+*.vcxproj.us
+/TestStuff/*
