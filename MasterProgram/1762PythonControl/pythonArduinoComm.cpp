@@ -68,43 +68,39 @@ bool allReceived = false;
 
 bool getSerialData()
 {
-	if (Serial.available() > 0)
+	if (Serial.available() > 0) //check if there is serial data to be read in.
 	{
-		uint8_t x = Serial.read();
-		if (x == startMarker)
+		uint8_t x = Serial.read(); //read in one byte of data
+		if (x == startMarker) //if start marker is detected, turn on inProgress, and reset data recieved counter.
 		{
 			bytesRecvd = 0;
 			inProgress = true;
 		}
 		else
 		{
-			return false;
+			return false; //returning true or false is useful mostly for debugging.
 		}
 
-		while (inProgress)
+		while (inProgress) // with in progress turned on, keep reading in the message (when available) until end marker.
 		{
 			if (Serial.available() > 0)
 			{
-				tempBuffer[bytesRecvd] = x;
-				bytesRecvd++;
+				tempBuffer[bytesRecvd] = x; //add read in data to the temporary buffer
+				bytesRecvd++; //keep count of the number of bytes recieved
 				x = Serial.read();
 				if (x == endMarker)
 				{	
-					tempBuffer[bytesRecvd] = x;
+					tempBuffer[bytesRecvd] = x;  //if an end marker is found, add it to the end of the buffer
 					bytesRecvd++;
 					//debugToPC(bytesRecvd);
-					inProgress = false;
-					allReceived = true;
-					dataSentNum = tempBuffer[1];
-					decodeHighBytes();
+					inProgress = false; //turn of in progress to indicate message reading is finished
+					allReceived = true; //tells another part of program that the entire message is recieved
+					dataSentNum = tempBuffer[1]; //store the first byte of data which contains the length of the message
+					decodeHighBytes(); //decode the data
 					return true;
 				}
 			}
 		}
-
-		
-		
-	
 	}
 	else
 	{
@@ -114,16 +110,17 @@ bool getSerialData()
 
 void decodeHighBytes(){
 	dataRecvCount = 0;
+	//loop through the message looking for special bytes
 	for (uint8_t n = 2; n < bytesRecvd - 1; n++) //n=2 skips the start marker and the count byte, -1 omits the end marker
 	{
 		uint8_t x = tempBuffer[n];
-		if (x == specialByte)
+		if (x == specialByte) //if special byte(253) is detecetd, add the next byte to its value to get the real value intended to be sent. 
 		{
 			n++;
 			x = x + tempBuffer[n];
 		}
 
-		dataRecvd[dataRecvCount] = x;
+		dataRecvd[dataRecvCount] = x; //stores the actual amount of data sent, rather than bytes sent, which can be different due to special bytes.
 		dataRecvCount++;
 
 	}
@@ -167,27 +164,27 @@ void processData() {
     dataToPC();
 
     delay(100); //not so sure about this delay.
-    allReceived = false; 
+    allReceived = false; //ready to read and interpret a new message.
   }
 }
 
 void interpretData()
 {
-	command = dataRecvd[0];
-	if (command == modeChange)
+	command = dataRecvd[0]; //first message byte is a command byte.
+	if (command == modeChange) //if command byte is change mode, redefine the mode var here.
 	{
 		mode = dataRecvd[1];
 	}
-	if (command == varRedefine)
+	if (command == varRedefine) //if command byte is change variable
 	{
-		variableToChange = dataRecvd[1];
+		variableToChange = dataRecvd[1]; //first byte after command tells what variable to change
 		unsigned long bignumber = 0;
-		for (int x = 2; x < 6; x++)
+		for (int x = 2; x < 6; x++) //interpret the remaining bytes (which should be a 32 bit number, 4 bytes)
 		{
 			bignumber = (bignumber<<8);
 			bignumber = bignumber + (unsigned long)dataRecvd[x];
 		}
-		newVarValue = bignumber;
+		newVarValue = bignumber; //save the value of the variable redefinition.
 	}
 }
 
@@ -205,7 +202,7 @@ void dataToPC() {
 }
 
 
-//========================= I DEFINITELY INTEND ON CHANGING or REMOVING THESE
+//=========================
 
 void debugToPC( char arr[]) {
     byte nb = 0;
@@ -230,15 +227,16 @@ void debugToPC( byte num) {
 bool varUpdate(variableRegisterArray& vars)
 {
 	bool msgrecieved;
-	msgrecieved = getSerialData();
+	msgrecieved = getSerialData(); //get a message from the computer
 	//processData();
-	if (msgrecieved == true)
+	if (msgrecieved == true) //once a message has been recieved do the following
 	{
-		processData();
+		processData(); //process the data to read in commands
 		if (command == modeChange)
 		{
-			vars.mode = mode;
-		}
+			vars.mode = mode; //if command is mode change, change the mode 
+		} 
+		//change the appropriate variable to the given value.
 		if (command == varRedefine)//See header file for what these are
 		{
 			if (variableToChange == flash)
