@@ -42,8 +42,8 @@ stepFlag calcStepSize(double stepTime, double stepRate, double maxStepSize = 100
 	{
 		alertFlag = false;
 	}
-	Serial.print("calculated step size: ");
-	Serial.println(ss, 100);
+	//Serial.print("calculated step size: ");
+	//Serial.println(ss, 100);
 	return { ss, alertFlag };
 }
 

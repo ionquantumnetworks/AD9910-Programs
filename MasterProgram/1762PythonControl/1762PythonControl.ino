@@ -95,29 +95,11 @@ void loop() {
       vars.sweepLowerBound = 39000000;
       vars.sweepCenterFrequency = 40000000;
       vars.sweepSpan = 500000;
-      vars.sweepRateStart = 1000000;
-      vars.sweepRateStop = 100000000;
+      vars.sweepRateStart = 100000000;
+      vars.sweepRateStop = 1000000000;
       initilize = false;
   }
   varUpdate(vars);
-//  if(vars.mode == 0x01)
-//  {
-//    digitalWrite(LED1, HIGH);
-//    digitalWrite(LED2, LOW);
-//    digitalWrite(LED3, LOW);
-//  }
-//  else if(vars.mode == 0x02)
-//  {    
-//    digitalWrite(LED1, LOW);
-//    digitalWrite(LED2, HIGH);
-//    digitalWrite(LED3, LOW);
-//  }
-//  else
-//  {
-//    digitalWrite(LED1, LOW);
-//    digitalWrite(LED2, LOW);
-//    digitalWrite(LED3, HIGH);
-//  }
   digitalWrite(LED3,LOW);
   delay(10);
   MODE1(vars);
@@ -128,7 +110,6 @@ void loop() {
   digitalWrite(LED3,HIGH);
   delay(10);
   SweepScan(vars, triggerpin, readypin);
- // Serial.println(F("messing with program"));
 }
 
 
@@ -144,11 +125,6 @@ void MODE1(variableRegisterArray& vars)
     {
       digitalWrite(LED1, HIGH);
       varUpdate(vars);
-//      getSerialData();
-//      processData();
-//      MODE = dataRecvd[0];
-//      var1 = dataRecvd[1];
-//      interval = dataRecvd[2];
     }
     while(vars.flash == true && vars.mode == M1)
     {
@@ -167,21 +143,6 @@ void MODE1(variableRegisterArray& vars)
         digitalWrite(LED1, LED1State);
       }
       msg = varUpdate(vars);
-//      if(msg == false)
-//      {
-//        digitalWrite(LED3, HIGH);
-//      }
-//      if(msg == true)
-//      {
-//        digitalWrite(LED3,LOW);
-//        delay(1000);
-//        //return;
-//      }
-//      getSerialData();
-//      processData();
-//      MODE = dataRecvd[0];
-//      var1 = dataRecvd[1];
-//      interval = dataRecvd[2];
     }
     digitalWrite(LED1,LOW);
     digitalWrite(LED2,LOW);
@@ -203,11 +164,6 @@ void MODE2(variableRegisterArray& vars)
     {
       digitalWrite(LED2, HIGH);
       varUpdate(vars);
-//      getSerialData();
-//      processData();
-//      MODE = dataRecvd[0];
-//      var1 = dataRecvd[1];
-//      interval = dataRecvd[2];
     }
     while(vars.flash == true && vars.mode == M2)
     {
@@ -241,31 +197,34 @@ void MODE2(variableRegisterArray& vars)
 
 //===================================================================
 
-//NEED TO TEST THE SWEEPSCAN STUFF AND ADD IN ABILITY TO READ IN SWEEP SCAN VARIABLES
-//TO DO THIS I FIRST NEED TO EDIT THE PYHTHON PROGRAM TO CONSTANTLY READ IN THE SERIAL
 void SweepScan(variableRegisterArray& vars, int triggerpin, int readypin)
 {
     if (vars.mode == SweepScanMode)
     {
         Serial.println("Entering freq sweep scan mode.");
-        Serial.print("Trigger pin is:");
-        Serial.println(triggerpin);
-        Serial.print("sweep upper bound: ");
-        Serial.println(vars.sweepUpperBound);
-        Serial.print("sweep upper bound: ");
-        Serial.println(vars.sweepLowerBound);
-        Serial.print("sweep center frequency: ");
-        Serial.println(vars.sweepCenterFrequency);
-        Serial.print("sweep starting rate: ");
-        Serial.println(vars.sweepRateStart);
-        Serial.print("sweep ending rate: ");
-        Serial.println(vars.sweepRateStop);
+        //Serial.print("Trigger pin is:");
+        //Serial.println(triggerpin);
+        //Serial.print("sweep upper bound: ");
+        //Serial.println(vars.sweepUpperBound);
+        //Serial.print("sweep lower bound: ");
+        //Serial.println(vars.sweepLowerBound);
+        //Serial.print("sweep center frequency: ");
+        //Serial.println(vars.sweepCenterFrequency);
+        Serial.println("-----------------------");
+        Serial.print("Sweep starting rate: ");
+        Serial.print(vars.sweepRateStart*ms/M);
+        Serial.println(" MHz/ms");
+        Serial.print("Sweep ending rate: ");
+        Serial.print(vars.sweepRateStop*ms/M);
+        Serial.println(" MHz/ms");
         start_stop limits = calcStartStop(vars.sweepCenterFrequency, vars.sweepSpan, vars.sweepUpperBound, vars.sweepLowerBound);
         unsigned long scanStepSize = (vars.sweepRateStop - vars.sweepRateStart) / (vars.numSteps - 1);
         double sweepStepTime = 8 * ns;
-        Serial.print("Scan step Size is:");
-        Serial.println(scanStepSize);
-        printStartStopSweep(limits); //Once we get a serial monitor running in python we can use this.
+        Serial.print("Scan step size is: ");
+        Serial.print(scanStepSize*ms/M);
+        Serial.println(" MHz/ms");
+        Serial.println("-----------------------");
+        printStartStopSweep(limits);
 
         for (int i = 0; i < vars.numSteps; i++)
         {
@@ -278,8 +237,8 @@ void SweepScan(variableRegisterArray& vars, int triggerpin, int readypin)
             DDS.freqSweepParameters(limits.stop, limits.start, sweepStepSize, sweepStepSize, sweepStepTime, sweepStepTime);
 
             Serial.print(F("Current scan rate is: "));
-            Serial.print(currentRate);
-            Serial.println(F("Hz/s"));
+            Serial.print((float)(currentRate*ms/M));
+            Serial.println(F(" MHz/ms"));
             //Serial.println(F(" MHz/ms"));
             Serial.print(F("Current digitized sweep step size is: "));
             Serial.print(sweepStepSize);
@@ -308,6 +267,7 @@ void printStartStopSweep(start_stop limits)
     Serial.print(F("This corresponds to a total span of: "));
     Serial.print((limits.stop-limits.start) / k);
     Serial.println(F(" kHz."));
+    Serial.println("-----------------------");
     //Serial.println();
     //Messages
 }
@@ -328,20 +288,10 @@ void repeatedTrigSweep(int runs, boolean repeat, variableRegisterArray& vars, in
             {
                 counter = counter + 1;
             }
-            digitalWrite(readypin, LOW); //turn off led to show that trigger occured
 
-            //Serial.print(F("Current scan rate is: "));
-            //Serial.print(currentRate / M * ms);
-            //Serial.println(F(" MHz/ms"));
-            //Serial.print(F("Current digitized sweep step size is: "));
-            //Serial.print(sweepStepSize);
-            //Serial.println(F("Hz"));
-            //Serial.print(F("Each step corresponds to "));
-            //Serial.print(sweepStepSize / span * 100, 5);
-            //Serial.println(F("% of the entire scan."));
+            digitalWrite(readypin, LOW); //turn off led to show that trigger occured
             Serial.print(F("Run number at this Scan Rate: "));
             Serial.println(counter); //print over serial what trigger number we are at.
-
 
             delay(300); //delay so I can see LED is low.. also I can't press a button too quickly... temporary.
             //the delay below will need to be replaced with a value that corresponds to how long the sweep should be going on for.
@@ -351,9 +301,6 @@ void repeatedTrigSweep(int runs, boolean repeat, variableRegisterArray& vars, in
             delay(300);
             digitalWrite(sTrig, LOW);
             digitalWrite(OSKpin, LOW);
-
-
-            //Serial.println();
         }
         else
         {
