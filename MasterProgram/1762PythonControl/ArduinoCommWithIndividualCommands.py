@@ -166,7 +166,7 @@ def sendToArduino(inputarray):
 def getAndSendTestMessage():
 
     ##########################################################
-    #These need to match pythonArduinoComm.cpp
+    #!!!!!These need to match pythonArduinoComm.cpp!!!!!!!!!!
     flash = 98;
     interval = 99;
     numSteps = 1;
@@ -265,15 +265,15 @@ def getAndSendTestMessage():
             else:
                 newVarValue = 0;
         elif varToChange == pulseTime:
-            newVarValue = int("enter 1762 pulse duration: ");
+            newVarValue = int(input("enter 1762 pulse duration: "));
         elif varToChange == freqStart:
-            newVarValue = int("enter spectroscopy starting frequency: ");
+            newVarValue = int(input("enter spectroscopy starting frequency: "));
         elif varToChange == freqStop:
-            newVarValue = int("enter spectroscopy ending frequency: ");
+            newVarValue = int(input("enter spectroscopy ending frequency: "));
         elif varToChange == pulseTimeStart:
-            newVarValue = int("enter rabi flopping starting pulse duration: ");
+            newVarValue = int(input("enter rabi flopping starting pulse duration: "));
         elif varToChange == pulseTimeStop:
-            newVarValue = int("enter rabi flopping ending pulse duration: ");
+            newVarValue = int(input("enter rabi flopping ending pulse duration: "));
         else:
             print("invalid value.")
             varToChange = 0;#0 should do nothing to the adrunio program.. default assignment.
