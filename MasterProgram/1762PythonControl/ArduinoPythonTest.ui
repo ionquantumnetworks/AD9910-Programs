@@ -1,0 +1,631 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow</class>
+ <widget class="QMainWindow" name="MainWindow">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>1031</width>
+    <height>695</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QGridLayout" name="gridLayout">
+    <item row="0" column="0" colspan="2">
+     <layout class="QHBoxLayout" name="horizontalLayout_2">
+      <item>
+       <widget class="QLabel" name="COM_Label">
+        <property name="text">
+         <string>COM PORT: </string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QLineEdit" name="COM_Input">
+        <property name="sizePolicy">
+         <sizepolicy hsizetype="Fixed" vsizetype="Fixed">
+          <horstretch>0</horstretch>
+          <verstretch>0</verstretch>
+         </sizepolicy>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QRadioButton" name="ConnectedRadioButton">
+        <property name="text">
+         <string>Connected</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="ConnectButton">
+        <property name="text">
+         <string>Connect</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="DisconnectButton">
+        <property name="text">
+         <string>Disconnect</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_2">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item row="2" column="0">
+     <widget class="QTabWidget" name="VariableTabWidget">
+      <property name="sizePolicy">
+       <sizepolicy hsizetype="Minimum" vsizetype="Expanding">
+        <horstretch>0</horstretch>
+        <verstretch>0</verstretch>
+       </sizepolicy>
+      </property>
+      <property name="currentIndex">
+       <number>2</number>
+      </property>
+      <widget class="QWidget" name="GeneralTab">
+       <attribute name="title">
+        <string>General</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget_5">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>401</width>
+          <height>73</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="GeneralQGrid">
+         <item row="2" column="2">
+          <widget class="QLineEdit" name="RunsPerStepQLineEdit"/>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLCDNumber" name="NumStepsQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLCDNumber" name="RunsPerStepQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLineEdit" name="NumStepsQLineEdit"/>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="RunsPerStepQLabel">
+           <property name="text">
+            <string>Runs Per Step</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="NumStepsQLabel">
+           <property name="text">
+            <string>Number of Steps</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="VariableQLabel_3">
+           <property name="text">
+            <string>Variable</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="CurrentValQLabel_3">
+           <property name="text">
+            <string>Current Value</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="NewValQLabel_3">
+           <property name="text">
+            <string>New Value to be Uploaded</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="SFplusTab">
+       <attribute name="title">
+        <string>Single Frequency, Spectro, Rabi Flop</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget_4">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>403</width>
+          <height>189</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="SFplusQGrid">
+         <item row="2" column="1">
+          <widget class="QLCDNumber" name="FreqStartQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLCDNumber" name="PulseTimeQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLCDNumber" name="PulseTimeStopQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="CurrentValQLabel_2">
+           <property name="text">
+            <string>Current Value</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="2">
+          <widget class="QLineEdit" name="PulseTimeQLineEdit"/>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLCDNumber" name="OutputFreqQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="PulseTimeQLabel">
+           <property name="text">
+            <string>Pulse Time</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLCDNumber" name="PulseTimeStartQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="FreqStartQLabel">
+           <property name="text">
+            <string>Frequency Start</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QLineEdit" name="PulseTimeStartQLineEdit"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="VariableQLabel_2">
+           <property name="text">
+            <string>Variable</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="PulseTimeStartQLabel">
+           <property name="text">
+            <string>Pulse Time Start</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLineEdit" name="FreqStartQLineEdit"/>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="FreqStopQLabel">
+           <property name="text">
+            <string>Frequency Stop</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="OutputFreqQLabel">
+           <property name="text">
+            <string>Output Frequency</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="PulseTimeStopQLabel">
+           <property name="text">
+            <string>Pulse Time Stop</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLineEdit" name="OutputFreqQLineEdit"/>
+         </item>
+         <item row="6" column="2">
+          <widget class="QLineEdit" name="PulseTimeStopQLineEdit"/>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLCDNumber" name="FreqStopQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="NewValQLabel_2">
+           <property name="text">
+            <string>New Value to be Uploaded</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="2">
+          <widget class="QLineEdit" name="FreqStopQLineEdit"/>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+      <widget class="QWidget" name="FreqSweepTab">
+       <attribute name="title">
+        <string>Frequency Sweep</string>
+       </attribute>
+       <widget class="QWidget" name="gridLayoutWidget">
+        <property name="geometry">
+         <rect>
+          <x>0</x>
+          <y>0</y>
+          <width>481</width>
+          <height>221</height>
+         </rect>
+        </property>
+        <layout class="QGridLayout" name="FreqSweepGrid">
+         <item row="3" column="2">
+          <widget class="QLineEdit" name="SweepCenterFreqQLineEdit"/>
+         </item>
+         <item row="4" column="1">
+          <widget class="QLCDNumber" name="SweepRateQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="2">
+          <widget class="QLineEdit" name="SweepRateStopQLineEdit"/>
+         </item>
+         <item row="7" column="0">
+          <widget class="QLabel" name="SweepRateStopQLabel">
+           <property name="text">
+            <string>Sweep Rate Stop</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="1">
+          <widget class="QLCDNumber" name="SweepCenterFreqQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="0">
+          <widget class="QLabel" name="SweepLowerBoundQLabel">
+           <property name="text">
+            <string>Sweep Lower Bound</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="2" column="2">
+          <widget class="QLineEdit" name="SweepLowerBoundQLineEdit"/>
+         </item>
+         <item row="2" column="1">
+          <widget class="QLCDNumber" name="SweepLowerBoundQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="3" column="0">
+          <widget class="QLabel" name="SweepCenterFreqQLabel">
+           <property name="text">
+            <string>Sweep Center Frequency</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="0">
+          <widget class="QLabel" name="SweepSpanQLabel">
+           <property name="text">
+            <string>Sweep Span</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="2">
+          <widget class="QLabel" name="NewValQLabel">
+           <property name="text">
+            <string>New Value to be Uploaded</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="2">
+          <widget class="QLineEdit" name="SweepSpanQLineEdit"/>
+         </item>
+         <item row="1" column="1">
+          <widget class="QLCDNumber" name="SweepUpperBoundQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="4" column="0">
+          <widget class="QLabel" name="SweepRateQLabel">
+           <property name="text">
+            <string>Sweep Rate</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="1" column="2">
+          <widget class="QLineEdit" name="SweepUpperBoundQLineEdit"/>
+         </item>
+         <item row="0" column="0">
+          <widget class="QLabel" name="VariableQLabel">
+           <property name="text">
+            <string>Variable</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="2">
+          <widget class="QLineEdit" name="SweepRateStartQLineEdit"/>
+         </item>
+         <item row="4" column="2">
+          <widget class="QLineEdit" name="SweepRateQLineEdit"/>
+         </item>
+         <item row="1" column="0">
+          <widget class="QLabel" name="SweepUpperBoundQLabel">
+           <property name="text">
+            <string>Sweep Upper Bound</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="0">
+          <widget class="QLabel" name="SweepRateStartQLabel">
+           <property name="text">
+            <string>Sweep Rate Start</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="0" column="1">
+          <widget class="QLabel" name="CurrentValQLabel">
+           <property name="text">
+            <string>Current Value</string>
+           </property>
+           <property name="alignment">
+            <set>Qt::AlignCenter</set>
+           </property>
+          </widget>
+         </item>
+         <item row="5" column="1">
+          <widget class="QLCDNumber" name="SweepSpanQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="6" column="1">
+          <widget class="QLCDNumber" name="SweepRateStartQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+         <item row="7" column="1">
+          <widget class="QLCDNumber" name="SweepRateStopQLCD">
+           <property name="digitCount">
+            <number>10</number>
+           </property>
+          </widget>
+         </item>
+        </layout>
+       </widget>
+      </widget>
+     </widget>
+    </item>
+    <item row="1" column="0">
+     <layout class="QHBoxLayout" name="horizontalLayout_3">
+      <item>
+       <widget class="QLabel" name="ModeSelect_Label">
+        <property name="cursor">
+         <cursorShape>ArrowCursor</cursorShape>
+        </property>
+        <property name="toolTip">
+         <string>&lt;html&gt;&lt;head/&gt;&lt;body&gt;&lt;p&gt;Mode Selection Drop Down&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+        </property>
+        <property name="text">
+         <string>Mode Select</string>
+        </property>
+        <property name="alignment">
+         <set>Qt::AlignRight|Qt::AlignTrailing|Qt::AlignVCenter</set>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <widget class="QComboBox" name="ModeSelectDropDown">
+        <item>
+         <property name="text">
+          <string>Single Frequency</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Spectroscopy</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Rabi Scan</string>
+         </property>
+        </item>
+        <item>
+         <property name="text">
+          <string>Frequency Sweep Scan</string>
+         </property>
+        </item>
+       </widget>
+      </item>
+      <item>
+       <widget class="QPushButton" name="UploadButton">
+        <property name="text">
+         <string>Upload</string>
+        </property>
+       </widget>
+      </item>
+      <item>
+       <spacer name="horizontalSpacer_3">
+        <property name="orientation">
+         <enum>Qt::Horizontal</enum>
+        </property>
+        <property name="sizeHint" stdset="0">
+         <size>
+          <width>40</width>
+          <height>20</height>
+         </size>
+        </property>
+       </spacer>
+      </item>
+     </layout>
+    </item>
+    <item row="1" column="1">
+     <spacer name="horizontalSpacer">
+      <property name="orientation">
+       <enum>Qt::Horizontal</enum>
+      </property>
+      <property name="sizeHint" stdset="0">
+       <size>
+        <width>40</width>
+        <height>20</height>
+       </size>
+      </property>
+     </spacer>
+    </item>
+    <item row="3" column="0" colspan="2">
+     <widget class="QTextBrowser" name="CommQTextBrowser">
+      <property name="html">
+       <string>&lt;!DOCTYPE HTML PUBLIC &quot;-//W3C//DTD HTML 4.0//EN&quot; &quot;http://www.w3.org/TR/REC-html40/strict.dtd&quot;&gt;
+&lt;html&gt;&lt;head&gt;&lt;meta name=&quot;qrichtext&quot; content=&quot;1&quot; /&gt;&lt;style type=&quot;text/css&quot;&gt;
+p, li { white-space: pre-wrap; }
+&lt;/style&gt;&lt;/head&gt;&lt;body style=&quot; font-family:'MS Shell Dlg 2'; font-size:8.25pt; font-weight:400; font-style:normal;&quot;&gt;
+&lt;p style=&quot;-qt-paragraph-type:empty; margin-top:0px; margin-bottom:0px; margin-left:0px; margin-right:0px; -qt-block-indent:0; text-indent:0px;&quot;&gt;&lt;br /&gt;&lt;/p&gt;&lt;/body&gt;&lt;/html&gt;</string>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>1031</width>
+     <height>21</height>
+    </rect>
+   </property>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
