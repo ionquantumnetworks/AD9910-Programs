@@ -46,7 +46,7 @@ def recvFromArduino():
     
     ck = bytearray()
     x = "z" #just needs to be not the start marker
-    byteCount = -1 #last increment will be one to many
+    byteCount = -1 #last increment will be one too many
     #here we read in bytes, without saving, until we read a start marker 
     #may want to program in a shorter timeout, 
     msg = ""; #adding in ability to read in things that don't have start and end marker bytes. and print any messages read.
@@ -72,6 +72,7 @@ def recvFromArduino():
     msgarray = decodeHighBytes(ck)
     return msgarray
     
+
     
 #=======================================
 
@@ -116,8 +117,7 @@ def encodeHighBytes(barray):
             outarray += bytearray((n-specialMarker).to_bytes(1,'big'))
         else:
             outarray += bytearray(n.to_bytes(1,'big'))
-            
-            
+                        
     return outarray
 #======================================
 
@@ -146,7 +146,7 @@ def sendToArduino(inputarray):
         # print(temparray)
         # print("length")
         # print(len(temparray).to_bytes(1,'big'))
-        if len(temparray) < 64:
+        if len(temparray) < 33:
             ser.write(startMarkerByte)
             ser.write((len(temparray)+1).to_bytes(1,'big'))
             ser.write(temparray)
@@ -156,10 +156,61 @@ def sendToArduino(inputarray):
         else:
             print("Message length of", end ='')
             print(len(temparray), end = '')
-            print('bytes is too long. Reduce to 63 bytes.')
+            print('bytes is too long. Reduce to 32 bytes.')
             
     else:
         print("Invalid input type. Must be string or bytearray.")
+        
+def sendToArduino2(inputarray,ser):
+    global specialByte
+    global startMarkerByte
+    global endMarkerByte
+    sent = False
+    # print("inside sendToArduino")
+    # print(inputarray)
+    if type(inputarray) == str:
+        print("sending str")
+        temparray = bytearray(inputarray, 'UTF-8')
+        if len(temparray) < 64:
+            ser.write(startMarkerByte)
+            ser.write(len(temparray).to_bytes(1,'big'))
+            ser.write(temparray)
+            ser.write(endMarkerByte)
+            sent = True
+            return sent
+        else:
+            print("Message length of", end ='')
+            print(len(temparray), end = '')
+            print('bytes is too long. Reduce to 63 bytes.')
+            sent = False
+            return sent
+    elif type(inputarray) == bytearray:
+        # print("sending bytearray")
+        temparray = encodeHighBytes(inputarray)
+        # print("temp array:")
+        # print(temparray)
+        # print("length")
+        # print(len(temparray).to_bytes(1,'big'))
+        if len(temparray) < 33:
+            ser.write(startMarkerByte)
+            ser.write((len(temparray)+1).to_bytes(1,'big'))
+            ser.write(temparray)
+            # print("sent")
+            # print(temparray)
+            ser.write(endMarkerByte)
+            sent = True
+            return sent
+        else:
+            print("Message length of", end ='')
+            print(len(temparray), end = '')
+            print('bytes is too long. Reduce to 32 bytes.')
+            sent = False
+            return sent
+            
+    else:
+        print("Invalid input type. Must be string or bytearray.")
+        sent = False
+        return sent
 
 #======================================
 #"enter commmand: 1 for mode change, 2 for variable change. \n"
@@ -167,8 +218,8 @@ def getAndSendTestMessage():
 
     ##########################################################
     #!!!!!These need to match pythonArduinoComm.cpp!!!!!!!!!!
-    flash = 98;
-    interval = 99;
+    flash = 17;
+    interval = 18;
     numSteps = 1;
     runsPerStep = 2;
     sweepUpperBound = 3;
@@ -295,6 +346,7 @@ def readMessageThread():
             print("recieved coded message: ")
             print(msgarray)
             msgPresent = True;
+            return msgarray
 
 
 
@@ -306,57 +358,67 @@ import time
 import sys
 import threading
 
-
-baudrate = 115200;
-COMPORT = 'COM3';
-
-ser = serial.Serial(COMPORT, baudrate,  timeout = 1)
-
-
 startMarker = 254;
 endMarker = 255;
 specialMarker = 253;
 specialByte = specialMarker.to_bytes(1,'big')
 startMarkerByte = startMarker.to_bytes(1,'big')
 endMarkerByte = endMarker.to_bytes(1,'big')
+baudrate = 115200;
+COMPORT = 'COM3';
+    
+# ser = serial.Serial(COMPORT, baudrate,  timeout = 1)
 
-
-waitForArduino()
-#time.sleep(1)
-
-
-try:
-    msgPresent = False;
-    msgreadthread = threading.Thread(target = readMessageThread);
-    msgreadthread.start();
-    getAndSendTestMessage();
-    while True:
-        # msgPresent = False
-        # if ser.in_waiting > 0:    
-        #     msgarray = recvFromArduino()
-        #     print("recieved message: ")
-        #     print(msgarray)
-        #     msgPresent = True;
-        try:
-            # time.sleep(0.0001);
-            if msgPresent == True:
-                msgPresent = False;
-                getAndSendTestMessage();
-                print("hit ctr-c to send a message")
-        except KeyboardInterrupt:
-            print("keyboard interrupt")
-            # if msgPresent == True:
-            #     msgPresent = False;
-            #     getAndSendTestMessage();
-            #     print("hit ctr-c to send a message")
-            
-except KeyboardInterrupt:
+if __name__ == "__main__":
+    COMPORT = 'COM3';
+    
+    ser = serial.Serial(COMPORT, baudrate,  timeout = 1)
+    
+    
+    startMarker = 254;
+    endMarker = 255;
+    specialMarker = 253;
+    specialByte = specialMarker.to_bytes(1,'big')
+    startMarkerByte = startMarker.to_bytes(1,'big')
+    endMarkerByte = endMarker.to_bytes(1,'big')
+    
+    
+    waitForArduino()
+    #time.sleep(1)
+    
+    
+    try:
+        msgPresent = False;
+        msgreadthread = threading.Thread(target = readMessageThread);
+        msgreadthread.start();
+        getAndSendTestMessage();
+        while True:
+            # msgPresent = False
+            # if ser.in_waiting > 0:    
+            #     msgarray = recvFromArduino()
+            #     print("recieved message: ")
+            #     print(msgarray)
+            #     msgPresent = True;
+            try:
+                # time.sleep(0.0001);
+                if msgPresent == True:
+                    msgPresent = False;
+                    getAndSendTestMessage();
+                    print("hit ctr-c to send a message")
+            except KeyboardInterrupt:
+                print("keyboard interrupt")
+                # if msgPresent == True:
+                #     msgPresent = False;
+                #     getAndSendTestMessage();
+                #     print("hit ctr-c to send a message")
+                
+    except KeyboardInterrupt:
+        ser.close()
+        print("keyboard interrupt")
+                
+    except:
+        ser.close()
+        print("exiting")
+    
     ser.close()
-    print("keyboard interrupt")
-            
-except:
-    ser.close()
-    print("exiting")
-
-ser.close()
-sys.exit()
+    sys.exit()

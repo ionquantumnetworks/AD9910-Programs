@@ -31,8 +31,8 @@ const uint8_t varRedefine = 2;
 
 //================Variable Addresses===============//
 //Testing Variables//
-const uint8_t flash = 98;
-const uint8_t interval = 99;
+const uint8_t flash = 17;
+const uint8_t interval = 18;
 
 //Common Paramters for all scans//
 const uint8_t numSteps = 1;
