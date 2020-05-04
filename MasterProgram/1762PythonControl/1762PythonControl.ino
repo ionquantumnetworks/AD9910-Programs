@@ -350,7 +350,7 @@ void singleFreq(variableRegisterArray& vars)
             if(vars.frequency != currentFreq)
             {
                 DDS.set_freq(vars.frequency, 0);
-                Serial.println(F("Frequency changed to: "));
+                Serial.print(F("Frequency changed to: "));
                 Serial.println(vars.frequency);
             }
             
