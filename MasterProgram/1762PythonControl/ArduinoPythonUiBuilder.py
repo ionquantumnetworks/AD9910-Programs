@@ -12,6 +12,7 @@ from PySide2.QtCore import QFile, Signal, QThread
 from ui_mainwindow import Ui_MainWindow
 import serial
 import queue
+import time
 
 
 from ArduinoCommWithIndividualCommands import *
@@ -125,6 +126,7 @@ class MainWindow(QMainWindow):
     def updateTextBrowser(self, msg):
         if type(msg)==bytearray:
             tempmsg = msg[1:].decode()
+            print("bytearray")
             self.ui.CommQTextBrowser.append(tempmsg)
         elif type(msg)==str:    
             self.ui.CommQTextBrowser.append(str(msg))
@@ -153,6 +155,7 @@ class MainWindow(QMainWindow):
         global serial_open
         global baudrate
         global ser
+        global ArduinoRdy
         if serial_open == False:
             self.updateTextBrowser("Opening " + self.ui.COM_Input.text() + "...")
             try:
@@ -161,7 +164,16 @@ class MainWindow(QMainWindow):
                 serial_open = True
                 self.reader.start()
                 self.ui.ConnectedRadioButton.setChecked(True)
-                self.updateTextBrowser(self.ui.COM_Input.text() + " opened successfully.")
+                self.updateTextBrowser(self.ui.COM_Input.text() + " opened successfully." +"\n Uploading initial variables...")
+                try:
+                    while ArduinoRdy == False:
+                        time.sleep(0.2)
+                        print("Arduino Not Ready")
+                    self.InitialUpload()
+                    self.updateTextBrowser("sucessfully uploaded initial variables.")
+                except:
+                    self.updateTextBrowser("unsucessful at uploading initial variables")
+                
             except:
                 self.updateTextBrowser("Unsuccesful at opening" + self.ui.COM_Input.text())
         else:
@@ -171,12 +183,14 @@ class MainWindow(QMainWindow):
         global serial_open
         global baudrate
         global ser
+        global ArduinoRdy
         if serial_open == True:
             try:
                 serial_open = False
                 time.sleep(0.1)
                 ser.close()
                 self.ui.ConnectedRadioButton.setChecked(False)
+                ArduinoRdy = False
                 self.updateTextBrowser("Serial port closed.")
             except:
                 self.updateTextBrowser("Issue closing port.")
@@ -265,31 +279,58 @@ class MainWindow(QMainWindow):
             self.updateTextBrowser("Mode selection not found.. make sure code includes any new drop down selections added..")
             self.updateTextBrowser("Will keep current mode.")
             return self.variableArray[self.mode]
+    
+    def HumanVarInputConvert(self, valueTxt, unitTxt = "Hz"):
+        #default value is "Hz" i.e. a multiplier of 1.
+        temp = valueTxt.split(".")
+        if len(temp) > 2:
+            self.updateTextBrowser("Too many decimals, ignoring everything after 2nd decimal.")
+        if unitTxt == "MHz":
+            unit = 1000000
+        elif unitTxt == "kHz":
+            unit = 1000
+        elif unitTxt == "Hz":
+            unit = 1
         
+        #calculate number in front of decimal
+        b4dec = int(temp[0]) * unit
+        
+        #calculate number after decimal
+        afterdec=0
+        #min function here protects against a super long number after the dec
+        if len(temp)>1:
+            for i in range(0, min(len(temp[1]),10)):
+                multiplier = int(unit/(10**(i+1))) #int here ensures that the value added will be zero if it is less than 1. 
+                afterdec += int(temp[1][i])*multiplier
+        
+        totVal = b4dec + afterdec
+        
+        return totVal
+    
     def updateVarTempArray(self, currentArray):
-        #takes eahc of the input QlineEdits and puts into temp array
+        #takes each of the input QlineEdits and puts into temp array
         #need to put in mode stuff
         try:
             tempArray = [0]*self.varNum
-            print(self.ui.ModeSelectDropDown.currentText())
+            #print(self.ui.ModeSelectDropDown.currentText())
             newMode = self.modeSelectResult()
             tempArray[self.mode] = newMode
-            tempArray[self.frequency] = int(self.ui.OutputFreqQLineEdit.text())
-            tempArray[self.freqStart] = int(self.ui.FreqStartQLineEdit.text())
-            tempArray[self.freqStop] = int(self.ui.FreqStopQLineEdit.text())
-            tempArray[self.pulseTime] = int(self.ui.PulseTimeQLineEdit.text())
-            tempArray[self.pulseTimeStart] = int(self.ui.PulseTimeStartQLineEdit.text())
-            tempArray[self.pulseTimeStop] = int(self.ui.PulseTimeStopQLineEdit.text())
-            tempArray[self.numSteps] = int(self.ui.NumStepsQLineEdit.text())
-            tempArray[self.runsPerStep] = int(self.ui.RunsPerStepQLineEdit.text())
-            tempArray[self.sweepUpperBound] = int(self.ui.SweepUpperBoundQLineEdit.text())
-            tempArray[self.sweepLowerBound] = int(self.ui.SweepLowerBoundQLineEdit.text())
-            tempArray[self.sweepCenterFrequency] = int(self.ui.SweepCenterFreqQLineEdit.text())
-            tempArray[self.sweepRate] = int(self.ui.SweepRateQLineEdit.text())
-            tempArray[self.sweepSpan] = int(self.ui.SweepSpanQLineEdit.text())
-            tempArray[self.sweepRateStart] = int(self.ui.SweepRateStartQLineEdit.text())
-            tempArray[self.sweepRateStop] = int(self.ui.SweepRateStopQLineEdit.text())
-            tempArray[self.outputStateSF] = int(False) #just for now need to put a button in.
+            tempArray[self.frequency] = self.HumanVarInputConvert(self.ui.OutputFreqQLineEdit.text())#int(self.ui.OutputFreqQLineEdit.text())
+            tempArray[self.freqStart] = self.HumanVarInputConvert(self.ui.FreqStartQLineEdit.text())
+            tempArray[self.freqStop] = self.HumanVarInputConvert(self.ui.FreqStopQLineEdit.text())
+            tempArray[self.pulseTime] = self.HumanVarInputConvert(self.ui.PulseTimeQLineEdit.text())
+            tempArray[self.pulseTimeStart] = self.HumanVarInputConvert(self.ui.PulseTimeStartQLineEdit.text())
+            tempArray[self.pulseTimeStop] = self.HumanVarInputConvert(self.ui.PulseTimeStopQLineEdit.text())
+            tempArray[self.numSteps] = self.HumanVarInputConvert(self.ui.NumStepsQLineEdit.text())
+            tempArray[self.runsPerStep] = self.HumanVarInputConvert(self.ui.RunsPerStepQLineEdit.text())
+            tempArray[self.sweepUpperBound] = self.HumanVarInputConvert(self.ui.SweepUpperBoundQLineEdit.text())
+            tempArray[self.sweepLowerBound] = self.HumanVarInputConvert(self.ui.SweepLowerBoundQLineEdit.text())
+            tempArray[self.sweepCenterFrequency] = self.HumanVarInputConvert(self.ui.SweepCenterFreqQLineEdit.text())
+            tempArray[self.sweepRate] = self.HumanVarInputConvert(self.ui.SweepRateQLineEdit.text())
+            tempArray[self.sweepSpan] = self.HumanVarInputConvert(self.ui.SweepSpanQLineEdit.text())
+            tempArray[self.sweepRateStart] = self.HumanVarInputConvert(self.ui.SweepRateStartQLineEdit.text())
+            tempArray[self.sweepRateStop] = self.HumanVarInputConvert(self.ui.SweepRateStopQLineEdit.text())
+            tempArray[self.outputStateSF] = int(True) #just for now need to put a button in.
             tempArray[self.interval] = int(110)
         except ValueError:
             #if someone put in a bad value it will just return the current array. This will make it so it does nothing later.
@@ -372,7 +413,74 @@ class MainWindow(QMainWindow):
                                     #may need to add a timeout feature in this in the future to try to resend the data. or we get stuck here forever!
                                     #need to test what is there for now though.
                                 
-                    
+    def InitialUpload(self):
+        global serial_open
+        global ser
+        global ArduinoQueue
+        if serial_open == True:
+            tempArray = self.variableArray
+            for i in range(self.varNum):
+                #check if variable has been changed
+                responseRcvd = False
+                #print("i = " + str(i))
+                #if mode change do this - need to write code
+                if i == self.mode:
+                    #need to send command byte for mode change, and mode to change to
+                    #print("uploading mode change")
+                    msgArray = bytearray(self.modechange.to_bytes(1,'big')) + bytearray(tempArray[i].to_bytes(1,'big'))
+                    sent = sendToArduino2(msgArray,ser)
+                    if sent == False:
+                         self.updateTextBrowser("issue updating variable, see python terminal")
+                         return
+                    #wait for reply from arduino before continuing
+                    #responseRcvd = False
+                    while responseRcvd == False:
+                        #check if queue has an item in it
+                        if ArduinoQueue.empty() == False:
+                            #read msg from queue
+                            msgFromArduino = ArduinoQueue.get()
+                            #print(msgFromArduino)
+                            #compare to msg sent
+                            if(msgFromArduino[1:] == msgArray):
+                                responseRcvd = True
+                                #update current value to match uploaded value
+                                self.variableArray[i]=tempArray[i]
+                                #print("response recieved")
+                #only other option is a variable change:
+                else:
+                    #need to send command byte for variable change, index of variable to change, and new value
+                    try:
+                        msgArray = bytearray(self.varchange.to_bytes(1,'big')) + bytearray(i.to_bytes(1,'big')) + bytearray(tempArray[i].to_bytes(4,'big'))
+                    except OverflowError:
+                        print("value too big to send to arduino")
+                        self.updateTextBrowser("value too big to send to arduino")
+                        return
+                    #print("uploading var change")
+                    sent = sendToArduino2(msgArray,ser)
+                    if sent == False:
+                         self.updateTextBrowser("issue updating variable, see python terminal")
+                         return
+                    #wait for reply from arduino before continuing
+                    #responseRcvd = False
+                    while responseRcvd == False:
+                        #check if queue has an item in it
+                        if ArduinoQueue.empty() == False:
+                            #read msg from queue
+                            msgFromArduino = ArduinoQueue.get()
+                            #print(msgFromArduino)
+                            #compare to msg sent
+                            if(msgFromArduino[1:] == msgArray):
+                                responseRcvd = True
+                                #update current value to match uploaded value
+                                self.variableArray[i]=tempArray[i]
+                                #print("response recieved")
+                                
+                        else:
+                            #print("no message")
+                            time.sleep(.1)
+                                #may need to add a timeout feature in this in the future to try to resend the data. or we get stuck here forever!
+                                #need to test what is there for now though.
+        
                 
                 
             
@@ -397,6 +505,8 @@ class MainWindow(QMainWindow):
 class comRead(QThread):
     global startMarkerByte, endMarkerByte, serial_open, ser, ArduinoQueue
     
+    global ArduinoRdy
+    
     outputTxt = Signal(str)
     
     encodedMsg = Signal(bytearray)
@@ -407,6 +517,7 @@ class comRead(QThread):
         self.keepgoing = False
         
     def run(self):
+        global ArduinoRdy
         self.keepgoing = True
         while self.keepgoing == True:
             # self.outputTxt.emit(readMessageThread())
@@ -426,10 +537,13 @@ class comRead(QThread):
                         #look at waitforarduino code to read text messages.
                         x=ser.read();
                         if(x == b"\n" or x == startMarkerByte):
-                            #print("Nonencoded message:")
-                            print(msg);
-                            self.outputTxt.emit(msg)
-                            msg = "";
+                            if (msg == "" or msg == " "):
+                                pass
+                            else:
+                                #print("Nonencoded message:")
+                                #print(msg);
+                                self.outputTxt.emit(msg)
+                                msg = "";
                         msg = msg + x.decode('cp437');
                         
                     x = ser.read()
@@ -442,62 +556,38 @@ class comRead(QThread):
         
                     #ck += bytearray(x)
                     msgarray = decodeHighBytes(ck)
-                    print(msgarray)
+                    #print(msgarray)
                     cmnd = msgarray[1]
-                    print("cmnd is: " + str(cmnd))
+                    #print("cmnd is: " + str(cmnd))
                     if (cmnd == 1 or cmnd == 2):
-                        print("is a command")
-                        self.encodedMsg.emit(msgarray)
+                        #print("is a command")
+                        #self.encodedMsg.emit(msgarray)
                         ArduinoQueue.put(msgarray)
                     else:
-                        print("not a command")
+                        if (ArduinoRdy == False):
+                            if msgarray[1:].decode()=="Arduino Ready":
+                                ArduinoRdy = True
+                                print("Arduino Ready message recieved")
+                        #print("not a command")
                         self.outputTxt.emit(str(msgarray))
-                        
-            time.sleep(0.1)
+                #This statement keeps this thread from eating up CPU when there is no message to be read.
+                else:
+                    if ArduinoRdy == True:
+                        #print("in slow sleep")
+                        time.sleep(0.1)
+                    else:
+                        #print("in fast sleep")
+                        time.sleep(0.1)
+            
+            elif serial_open == False:
+                self.keepgoing = False
+            
+
+                
 
     def stop(self):
         self.keepgoing = False
     
-
-
-# class VariableRegisterArray():
-#     global startMarkerByte, endMarkerByte, serial_open, ser
-    
-    
-#     def __init__():
-#         #mode selection
-#         self.mode = 1;
-        
-#         #for testing communicaiton
-#         self.flash = 0;
-#         self.interval = 1;
-        
-#         #common paramters for all scans
-#         self.numSteps = 10;
-#         self.runsPerStep = 10;
-        
-#         #frequency sweep parameters
-#         self.sweepUpperBound = 41000000;
-#         self.sweepLowerbound = 39000000;
-#         self.sweepCenterFrequency = 40000000;
-#         self.sweepRate = 100000000;
-#         self.sweepSpan = 1000000;
-#         #frequency sweep scan specific paramters
-#         self.sweepRateStart = 100000000;
-#         self.sweepRateStop = 1000000000;        
-        
-#         #single frequency mode
-#         self.frequency = 40000000;
-#         self.outputStateSF = False;
-       
-#         #single frequency spectroscopy paramters
-#         self.pulseTime = 1000; #microseconds of delay
-#         self.freqStart = 39000000;
-#         self.freqStop = 41000000;
-        
-#         #Rabi Flopping Paramters
-#         self.pulseTimeStart = 10; #microseconds of delay
-#         self.pulseTimeStop = 100; #microseconds of delay
 
 ArduinoQueue=queue.Queue()
 
@@ -505,7 +595,7 @@ if __name__ == "__main__":
     #temporary
     baudrate = 115200;
     serial_open = False
-    
+    ArduinoRdy = False
     app = QApplication.instance()
     if app is None:
         # Create the Qt Application if it doesn't exist
