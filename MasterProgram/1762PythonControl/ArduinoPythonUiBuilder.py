@@ -40,6 +40,15 @@ class MainWindow(QMainWindow):
     pulseTimeStart = 15;
     pulseTimeStop = 16;
     ###########################################################
+    ##########Mode Numeric Lables##########
+    mode_SingleFrequency = 4;
+    mode_SweepScan = 3;
+    mode_Spectroscopy = 5 ;
+    mode_RabiScan = 6;
+    mode_Test1 = 1;
+    mode_Test2 = 2;
+    
+    #modeList = [["Single Frequency", mode_SingleFrequency],["Spectroscopy", mode_Spectroscopy],["Rabi Scan", mode_RabiScan],["Frequency Sweep Scan", mode_SweepScan]]
     #####commands#######
     modechange = 1;
     varchange = 2;
@@ -85,6 +94,8 @@ class MainWindow(QMainWindow):
         
         # self.fromArduinoQueue = queue.Queue()
         
+
+        
         self.variableArray = self.InitialVariableArrayConstructor()
         self.UpdateVarLCDs()
         
@@ -124,7 +135,7 @@ class MainWindow(QMainWindow):
     def closeEvent(self, event):
         global ser
         global serial_open
-        print("closing app")
+        print("closing app...")
         if self.reader.keepgoing == True:
             self.reader.stop()
         if serial_open == True:
@@ -136,6 +147,7 @@ class MainWindow(QMainWindow):
                     print("port already closed")
                 else:
                     print("?? Weird serial stuff ??")
+        print("app closed.")
             
     def openCommPort(self):
         global serial_open
@@ -232,12 +244,36 @@ class MainWindow(QMainWindow):
         self.ui.SweepRateStartQLCD.display(self.variableArray[self.sweepRateStart])
         self.ui.SweepRateStopQLCD.display(self.variableArray[self.sweepRateStop])
         
+    def modeSelectResult(self):
+        if(self.ui.ModeSelectDropDown.currentText() == "Single Frequency"):
+            self.updateTextBrowser("Single Frequency mode selected.")
+            return self.mode_SingleFrequency
+        
+        elif(self.ui.ModeSelectDropDown.currentText() == "Spectroscopy"):
+            self.updateTextBrowser("Spectroscopy mode seleceted.")
+            return self.mode_Spectroscopy
+        
+        elif(self.ui.ModeSelectDropDown.currentText() == "Rabi Scan"):
+            self.updateTextBrowser("Rabi scan mode selected.")
+            return self.mode_RabiScan
+        
+        elif(self.ui.ModeSelectDropDown.currentText() == "Frequency Sweep Scan"):
+            self.updateTextBrowser("Frequency sweep scan mode selected.")
+            return self.mode_SweepScan
+        
+        else:
+            self.updateTextBrowser("Mode selection not found.. make sure code includes any new drop down selections added..")
+            self.updateTextBrowser("Will keep current mode.")
+            return self.variableArray[self.mode]
+        
     def updateVarTempArray(self, currentArray):
         #takes eahc of the input QlineEdits and puts into temp array
         #need to put in mode stuff
         try:
             tempArray = [0]*self.varNum
-            tempArray[self.mode] = 2
+            print(self.ui.ModeSelectDropDown.currentText())
+            newMode = self.modeSelectResult()
+            tempArray[self.mode] = newMode
             tempArray[self.frequency] = int(self.ui.OutputFreqQLineEdit.text())
             tempArray[self.freqStart] = int(self.ui.FreqStartQLineEdit.text())
             tempArray[self.freqStop] = int(self.ui.FreqStopQLineEdit.text())
