@@ -92,7 +92,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        
+        self.ui.COM_Input.setText('/dev/tty.usbmodem14101')
         # self.fromArduinoQueue = queue.Queue()
         
 
@@ -220,6 +220,7 @@ class MainWindow(QMainWindow):
         varArray[self.freqStop] = self.freqStopInit
         varArray[self.pulseTimeStart] = self.pulseTimeStartInit
         varArray[self.pulseTimeStop] = self.pulseTimeStopInit
+        varArray[self.mode] = self.modeInit
         
         #set initial line edits to avoid empty error until I put in some safety code
         self.ui.OutputFreqQLineEdit.setText(str(varArray[self.frequency]))
@@ -315,17 +316,17 @@ class MainWindow(QMainWindow):
             #print(self.ui.ModeSelectDropDown.currentText())
             newMode = self.modeSelectResult()
             tempArray[self.mode] = newMode
-            tempArray[self.frequency] = self.HumanVarInputConvert(self.ui.OutputFreqQLineEdit.text())#int(self.ui.OutputFreqQLineEdit.text())
-            tempArray[self.freqStart] = self.HumanVarInputConvert(self.ui.FreqStartQLineEdit.text())
-            tempArray[self.freqStop] = self.HumanVarInputConvert(self.ui.FreqStopQLineEdit.text())
+            tempArray[self.frequency] = self.HumanVarInputConvert(self.ui.OutputFreqQLineEdit.text(),self.ui.OutputFreqUnitComboBox.currentText())#int(self.ui.OutputFreqQLineEdit.text())
+            tempArray[self.freqStart] = self.HumanVarInputConvert(self.ui.FreqStartQLineEdit.text(),self.ui.FreqStartUnitComboBox.currentText())
+            tempArray[self.freqStop] = self.HumanVarInputConvert(self.ui.FreqStopQLineEdit.text(),self.ui.FreqStopUnitComboBox.currentText())
             tempArray[self.pulseTime] = self.HumanVarInputConvert(self.ui.PulseTimeQLineEdit.text())
             tempArray[self.pulseTimeStart] = self.HumanVarInputConvert(self.ui.PulseTimeStartQLineEdit.text())
             tempArray[self.pulseTimeStop] = self.HumanVarInputConvert(self.ui.PulseTimeStopQLineEdit.text())
             tempArray[self.numSteps] = self.HumanVarInputConvert(self.ui.NumStepsQLineEdit.text())
             tempArray[self.runsPerStep] = self.HumanVarInputConvert(self.ui.RunsPerStepQLineEdit.text())
-            tempArray[self.sweepUpperBound] = self.HumanVarInputConvert(self.ui.SweepUpperBoundQLineEdit.text())
-            tempArray[self.sweepLowerBound] = self.HumanVarInputConvert(self.ui.SweepLowerBoundQLineEdit.text())
-            tempArray[self.sweepCenterFrequency] = self.HumanVarInputConvert(self.ui.SweepCenterFreqQLineEdit.text())
+            tempArray[self.sweepUpperBound] = self.HumanVarInputConvert(self.ui.SweepUpperBoundQLineEdit.text(),self.ui.SweepUpperBoundUnitComboBox.currentText())
+            tempArray[self.sweepLowerBound] = self.HumanVarInputConvert(self.ui.SweepLowerBoundQLineEdit.text(),self.ui.SweepLowerBoundUnitComboBox.currentText())
+            tempArray[self.sweepCenterFrequency] = self.HumanVarInputConvert(self.ui.SweepCenterFreqQLineEdit.text(),self.ui.SweepCenterFreqUnitComboBox.currentText())
             tempArray[self.sweepRate] = self.HumanVarInputConvert(self.ui.SweepRateQLineEdit.text())
             tempArray[self.sweepSpan] = self.HumanVarInputConvert(self.ui.SweepSpanQLineEdit.text())
             tempArray[self.sweepRateStart] = self.HumanVarInputConvert(self.ui.SweepRateStartQLineEdit.text())
