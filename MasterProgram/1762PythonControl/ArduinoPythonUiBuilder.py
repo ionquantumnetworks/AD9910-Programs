@@ -9,6 +9,7 @@ Created on Wed Apr 29 14:01:54 2020
 import sys
 from PySide2.QtWidgets import QApplication, QMainWindow
 from PySide2.QtCore import QFile, Signal, QThread
+from PySide2 import QtGui
 from ui_mainwindow import Ui_MainWindow
 import serial
 import queue
@@ -223,39 +224,57 @@ class MainWindow(QMainWindow):
         varArray[self.mode] = self.modeInit
         
         #set initial line edits to avoid empty error until I put in some safety code
-        self.ui.OutputFreqQLineEdit.setText(str(varArray[self.frequency]))
-        self.ui.FreqStartQLineEdit.setText(str(varArray[self.freqStart]))
-        self.ui.FreqStopQLineEdit.setText(str(varArray[self.freqStop]))
+        self.ui.OutputFreqQLineEdit.setText(str(MakeHumanReadable(varArray[self.frequency],self.ui.OutputFreqUnitComboBox.currentText())))
+        self.ui.FreqStartQLineEdit.setText(str(MakeHumanReadable(varArray[self.freqStart],self.ui.FreqStartUnitComboBox.currentText())))
+        self.ui.FreqStopQLineEdit.setText(str(MakeHumanReadable(varArray[self.freqStop],self.ui.FreqStopUnitComboBox.currentText())))
         self.ui.PulseTimeQLineEdit.setText(str(varArray[self.pulseTime]))
         self.ui.PulseTimeStartQLineEdit.setText(str(varArray[self.pulseTimeStart]))
         self.ui.PulseTimeStopQLineEdit.setText(str(varArray[self.pulseTimeStop]))
         self.ui.NumStepsQLineEdit.setText(str(varArray[self.numSteps]))
         self.ui.RunsPerStepQLineEdit.setText(str(varArray[self.runsPerStep]))
-        self.ui.SweepUpperBoundQLineEdit.setText(str(varArray[self.sweepUpperBound]))
-        self.ui.SweepLowerBoundQLineEdit.setText(str(varArray[self.sweepLowerBound]))
-        self.ui.SweepCenterFreqQLineEdit.setText(str(varArray[self.sweepCenterFrequency]))
+        self.ui.SweepUpperBoundQLineEdit.setText(str(MakeHumanReadable(varArray[self.sweepUpperBound],self.ui.SweepUpperBoundUnitComboBox.currentText())))
+        self.ui.SweepLowerBoundQLineEdit.setText(str(MakeHumanReadable(varArray[self.sweepLowerBound],self.ui.SweepLowerBoundUnitComboBox.currentText())))
+        self.ui.SweepCenterFreqQLineEdit.setText(str(MakeHumanReadable(varArray[self.sweepCenterFrequency],self.ui.SweepCenterFreqUnitComboBox.currentText())))
         self.ui.SweepRateQLineEdit.setText(str(varArray[self.sweepRate]))
-        self.ui.SweepSpanQLineEdit.setText(str(varArray[self.sweepSpan]))
+        self.ui.SweepSpanQLineEdit.setText(str(MakeHumanReadable(varArray[self.sweepSpan],self.ui.SweepSpanUnitComboBox.currentText())))
         self.ui.SweepRateStartQLineEdit.setText(str(varArray[self.sweepRateStart]))
         self.ui.SweepRateStopQLineEdit.setText(str(varArray[self.sweepRateStop]))
         #print(varArray)
         return varArray
-                 
+    
+
+        
+        
+    
     def UpdateVarLCDs(self):
         #print("updating LCD")
-        self.ui.OutputFreqQLCD.display(self.variableArray[self.frequency])
-        self.ui.FreqStartQLCD.display(self.variableArray[self.freqStart])
-        self.ui.FreqStopQLCD.display(self.variableArray[self.freqStop])
+        # self.ui.OutputFreqQLCD.display(self.variableArray[self.frequency])
+        # self.ui.FreqStartQLCD.display(self.variableArray[self.freqStart])
+        # self.ui.FreqStopQLCD.display(self.variableArray[self.freqStop])
+        # self.ui.PulseTimeQLCD.display(self.variableArray[self.pulseTime])
+        # self.ui.PulseTimeStartQLCD.display(self.variableArray[self.pulseTimeStart])
+        # self.ui.PulseTimeStopQLCD.display(self.variableArray[self.pulseTimeStop])
+        # self.ui.NumStepsQLCD.display(self.variableArray[self.numSteps])
+        # self.ui.RunsPerStepQLCD.display(self.variableArray[self.runsPerStep])
+        # self.ui.SweepUpperBoundQLCD.display(self.variableArray[self.sweepUpperBound])
+        # self.ui.SweepLowerBoundQLCD.display(self.variableArray[self.sweepLowerBound])
+        # self.ui.SweepCenterFreqQLCD.display(self.variableArray[self.sweepCenterFrequency])
+        # self.ui.SweepRateQLCD.display(self.variableArray[self.sweepRate])
+        # self.ui.SweepSpanQLCD.display(self.variableArray[self.sweepSpan])
+        # self.ui.SweepRateStartQLCD.display(self.variableArray[self.sweepRateStart])
+        self.ui.OutputFreqQLCD.display(MakeHumanReadable(self.variableArray[self.frequency],self.ui.OutputFreqUnitComboBox.currentText()))
+        self.ui.FreqStartQLCD.display(MakeHumanReadable(self.variableArray[self.freqStart],self.ui.FreqStartUnitComboBox.currentText()))
+        self.ui.FreqStopQLCD.display(MakeHumanReadable(self.variableArray[self.freqStop],self.ui.FreqStopUnitComboBox.currentText()))
         self.ui.PulseTimeQLCD.display(self.variableArray[self.pulseTime])
         self.ui.PulseTimeStartQLCD.display(self.variableArray[self.pulseTimeStart])
         self.ui.PulseTimeStopQLCD.display(self.variableArray[self.pulseTimeStop])
         self.ui.NumStepsQLCD.display(self.variableArray[self.numSteps])
         self.ui.RunsPerStepQLCD.display(self.variableArray[self.runsPerStep])
-        self.ui.SweepUpperBoundQLCD.display(self.variableArray[self.sweepUpperBound])
-        self.ui.SweepLowerBoundQLCD.display(self.variableArray[self.sweepLowerBound])
-        self.ui.SweepCenterFreqQLCD.display(self.variableArray[self.sweepCenterFrequency])
+        self.ui.SweepUpperBoundQLCD.display(MakeHumanReadable(self.variableArray[self.sweepUpperBound],self.ui.SweepUpperBoundUnitComboBox.currentText()))
+        self.ui.SweepLowerBoundQLCD.display(MakeHumanReadable(self.variableArray[self.sweepLowerBound],self.ui.SweepLowerBoundUnitComboBox.currentText()))
+        self.ui.SweepCenterFreqQLCD.display(MakeHumanReadable(self.variableArray[self.sweepCenterFrequency],self.ui.SweepCenterFreqUnitComboBox.currentText()))
         self.ui.SweepRateQLCD.display(self.variableArray[self.sweepRate])
-        self.ui.SweepSpanQLCD.display(self.variableArray[self.sweepSpan])
+        self.ui.SweepSpanQLCD.display(MakeHumanReadable(self.variableArray[self.sweepSpan],self.ui.SweepSpanUnitComboBox.currentText()))
         self.ui.SweepRateStartQLCD.display(self.variableArray[self.sweepRateStart])
         self.ui.SweepRateStopQLCD.display(self.variableArray[self.sweepRateStop])
         
@@ -328,10 +347,10 @@ class MainWindow(QMainWindow):
             tempArray[self.sweepLowerBound] = self.HumanVarInputConvert(self.ui.SweepLowerBoundQLineEdit.text(),self.ui.SweepLowerBoundUnitComboBox.currentText())
             tempArray[self.sweepCenterFrequency] = self.HumanVarInputConvert(self.ui.SweepCenterFreqQLineEdit.text(),self.ui.SweepCenterFreqUnitComboBox.currentText())
             tempArray[self.sweepRate] = self.HumanVarInputConvert(self.ui.SweepRateQLineEdit.text())
-            tempArray[self.sweepSpan] = self.HumanVarInputConvert(self.ui.SweepSpanQLineEdit.text())
+            tempArray[self.sweepSpan] = self.HumanVarInputConvert(self.ui.SweepSpanQLineEdit.text(),self.ui.SweepSpanUnitComboBox.currentText())
             tempArray[self.sweepRateStart] = self.HumanVarInputConvert(self.ui.SweepRateStartQLineEdit.text())
             tempArray[self.sweepRateStop] = self.HumanVarInputConvert(self.ui.SweepRateStopQLineEdit.text())
-            tempArray[self.outputStateSF] = int(True) #just for now need to put a button in.
+            tempArray[self.outputStateSF] = int(self.ui.OutputONCheckbox.isChecked()) #just for now need to put a button in.
             tempArray[self.interval] = int(110)
         except ValueError:
             #if someone put in a bad value it will just return the current array. This will make it so it does nothing later.
@@ -411,6 +430,7 @@ class MainWindow(QMainWindow):
                             else:
                                 print("no message")
                                 time.sleep(.1)
+            self.UpdateVarLCDs()
                                     #may need to add a timeout feature in this in the future to try to resend the data. or we get stuck here forever!
                                     #need to test what is there for now though.
                                 
@@ -481,25 +501,10 @@ class MainWindow(QMainWindow):
                             time.sleep(.1)
                                 #may need to add a timeout feature in this in the future to try to resend the data. or we get stuck here forever!
                                 #need to test what is there for now though.
-        
+        self.UpdateVarLCDs()
                 
                 
             
-# class comQueueAdd(QThread):
-    
-#     def __init__(self, value, target):
-#         QTread.__init__(self)
-#         self.value = value
-#         self.target = target
-#         self.responseRcvd = False
-        
-#     def run(self):
-#         while responseRcvd == False:
-            
-#     @QtCore.Slot(object)
-#     def putMsgInFromArduinoQueue(self,target,value):
-#         print("putting" + str(value) + "into queue")
-#         self.target.put(value)
     
         
         
@@ -589,6 +594,16 @@ class comRead(QThread):
     def stop(self):
         self.keepgoing = False
     
+def MakeHumanReadable(val, unitSelect = "Hz"):
+    if unitSelect == "Hz":
+        outputVal = val
+        return outputVal
+    if unitSelect == "kHz":
+        outputVal = val/1000
+        return outputVal
+    if unitSelect == "MHz":
+        outputVal = val/1000000
+        return outputVal
 
 ArduinoQueue=queue.Queue()
 
@@ -601,7 +616,7 @@ if __name__ == "__main__":
     if app is None:
         # Create the Qt Application if it doesn't exist
         app = QApplication(sys.argv)
-        
+    app.setWindowIcon(QtGui.QIcon('ion.jpg'))
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
