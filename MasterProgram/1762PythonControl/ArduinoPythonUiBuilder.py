@@ -495,8 +495,6 @@ class MainWindow(QMainWindow):
                 else:
                     #need to send command byte for variable change, index of variable to change, and new value
                     try:
-                        print(i)
-                        print(msgArray)
                         msgArray = bytearray(self.varchange.to_bytes(1,'big')) + bytearray(i.to_bytes(1,'big')) + bytearray((tempArray[i]*self.commMultiplier).to_bytes(4,'big'))
                         okToSend = True
                     except OverflowError:
