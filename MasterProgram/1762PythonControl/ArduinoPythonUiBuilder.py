@@ -103,6 +103,16 @@ class MainWindow(QMainWindow):
         
         self.ui.UploadButton.clicked.connect(self.updateArduino)
         self.ui.ConnectButton.clicked.connect(self.openCommPort)
+        
+        self.ui.OutputFreqUnitComboBox.currentTextChanged.connect(lambda: self.UpdateSingleLCD(self.ui.OutputFreqUnitComboBox,self.ui.OutputFreqQLCD,self.variableArray[self.frequency]))
+        self.ui.FreqStartUnitComboBox.currentTextChanged.connect(lambda: self.UpdateSingleLCD(self.ui.FreqStartUnitComboBox,self.ui.FreqStartQLCD,self.variableArray[self.freqStart]))
+        self.ui.FreqStopUnitComboBox.currentTextChanged.connect(lambda: self.UpdateSingleLCD(self.ui.FreqStopUnitComboBox,self.ui.FreqStopQLCD,self.variableArray[self.freqStop]))
+        self.ui.SweepUpperBoundUnitComboBox.currentTextChanged.connect(lambda: self.UpdateSingleLCD(self.ui.SweepUpperBoundUnitComboBox,self.ui.SweepUpperBoundQLCD,self.variableArray[self.sweepUpperBound]))
+        self.ui.SweepLowerBoundUnitComboBox.currentTextChanged.connect(lambda: self.UpdateSingleLCD(self.ui.SweepLowerBoundUnitComboBox,self.ui.SweepLowerBoundQLCD,self.variableArray[self.sweepLowerBound]))
+        self.ui.SweepCenterFreqUnitComboBox.currentTextChanged.connect(lambda: self.UpdateSingleLCD(self.ui.SweepCenterFreqUnitComboBox,self.ui.SweepCenterFreqQLCD,self.variableArray[self.sweepCenterFrequency]))
+        self.ui.SweepSpanUnitComboBox.currentTextChanged.connect(lambda: self.UpdateSingleLCD(self.ui.SweepSpanUnitComboBox,self.ui.SweepSpanQLCD,self.variableArray[self.sweepSpan]))
+        
+        
         self.reader = comRead()
         self.reader.outputTxt.connect(self.updateTextBrowser)
         #self.reader.encodedMsg.connect(self.putMsgInFromArduinoQueue)
@@ -243,7 +253,9 @@ class MainWindow(QMainWindow):
         return varArray
     
 
-        
+    def UpdateSingleLCD(self, comboBox, targetLCD, varArrayValue):
+        targetLCD.display(MakeHumanReadable(varArrayValue,comboBox.currentText()))
+
         
     
     def UpdateVarLCDs(self):
