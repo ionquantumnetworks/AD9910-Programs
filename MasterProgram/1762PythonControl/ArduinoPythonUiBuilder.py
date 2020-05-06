@@ -89,6 +89,10 @@ class MainWindow(QMainWindow):
     pulseTimeStartInit = 10; #microseconds of delay
     pulseTimeStopInit = 100; #microseconds of delay
     
+    #################################################
+    #communication multiplier - AD9910 library wants frequency to be given in units of 0.1 Hz to allow for max precision, but we need to communicate in integers
+    commMultiplier = 10;
+    
     def __init__(self):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
@@ -385,6 +389,9 @@ class MainWindow(QMainWindow):
             for i in range(self.varNum):
                 #check if variable has been changed
                 responseRcvd = False
+                #in case of errors somewhere along the way
+                okToSend = False
+                sent = False
                 if tempArray[i] != self.variableArray[i]:
                     print("i = " + str(i))
                     #if mode change do this - need to write code
@@ -414,13 +421,15 @@ class MainWindow(QMainWindow):
                     else:
                         #need to send command byte for variable change, index of variable to change, and new value
                         try:
-                            msgArray = bytearray(self.varchange.to_bytes(1,'big')) + bytearray(i.to_bytes(1,'big')) + bytearray(tempArray[i].to_bytes(4,'big'))
+                            msgArray = bytearray(self.varchange.to_bytes(1,'big')) + bytearray(i.to_bytes(1,'big')) + bytearray((tempArray[i]*self.commMultiplier).to_bytes(4,'big'))
+                            okToSend = True
                         except OverflowError:
                             print("value too big to send to arduino")
                             self.updateTextBrowser("value too big to send to arduino")
-                            return
+                            continue
                         print("uploading var change")
-                        sent = sendToArduino2(msgArray,ser)
+                        if okToSend == True:
+                            sent = sendToArduino2(msgArray,ser)
                         if sent == False:
                              self.updateTextBrowser("issue updating variable, see python terminal")
                              return
@@ -455,6 +464,9 @@ class MainWindow(QMainWindow):
             for i in range(self.varNum):
                 #check if variable has been changed
                 responseRcvd = False
+                #in case of errors somewhere along the way
+                okToSend = False
+                sent = False
                 #print("i = " + str(i))
                 #if mode change do this - need to write code
                 if i == self.mode:
@@ -483,13 +495,18 @@ class MainWindow(QMainWindow):
                 else:
                     #need to send command byte for variable change, index of variable to change, and new value
                     try:
-                        msgArray = bytearray(self.varchange.to_bytes(1,'big')) + bytearray(i.to_bytes(1,'big')) + bytearray(tempArray[i].to_bytes(4,'big'))
+                        print(i)
+                        print(msgArray)
+                        msgArray = bytearray(self.varchange.to_bytes(1,'big')) + bytearray(i.to_bytes(1,'big')) + bytearray((tempArray[i]*self.commMultiplier).to_bytes(4,'big'))
+                        okToSend = True
                     except OverflowError:
                         print("value too big to send to arduino")
                         self.updateTextBrowser("value too big to send to arduino")
-                        return
+                        continue
+                    
                     #print("uploading var change")
-                    sent = sendToArduino2(msgArray,ser)
+                    if okToSend == True:
+                        sent = sendToArduino2(msgArray,ser)
                     if sent == False:
                          self.updateTextBrowser("issue updating variable, see python terminal")
                          return
@@ -513,7 +530,7 @@ class MainWindow(QMainWindow):
                             time.sleep(.1)
                                 #may need to add a timeout feature in this in the future to try to resend the data. or we get stuck here forever!
                                 #need to test what is there for now though.
-        self.UpdateVarLCDs()
+                self.UpdateVarLCDs()
                 
                 
             
