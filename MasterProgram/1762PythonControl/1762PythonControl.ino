@@ -17,6 +17,7 @@ double k = 1000;
 double M = 1000000;
 double ns = 0.000000001;
 double ms = 0.001;
+int commMult = 10; //To take into account unit of 0.1Hz
 //===============Variable Definitions==================
 
 
@@ -332,7 +333,8 @@ void singleFreq(variableRegisterArray& vars)
     {
         Serial.println(F("Entering single frequency mode..."));
         Serial.print(F("Frequency is: "));
-        Serial.println(vars.frequency);
+        Serial.print(vars.frequency/M/commMult);
+        Serial.println(F(" MHz"));
         DDS.singleFreqMode();//SET DDS to single frequency mode
         //NEED TO ADD PROFILE PIN STUFF OR HARDWIRE PINS
         while(vars.mode == singleFreqMode)
@@ -351,7 +353,8 @@ void singleFreq(variableRegisterArray& vars)
             {
                 DDS.set_freq(vars.frequency, 0);
                 Serial.print(F("Frequency changed to: "));
-                Serial.println(vars.frequency);
+                Serial.print(vars.frequency/M/commMult,5); //Factor of 10 is to compensate for being in units of 0.1 Hz as opposed to Hz.
+                Serial.println(F(" MHz."));
             }
             
         }
@@ -368,12 +371,14 @@ void spectroscopy(variableRegisterArray& vars, int triggerpin, int readypin)
         Serial.print(vars.pulseTime);
         Serial.println(F("uS."));
         Serial.print(F("Starting frequency is: "));
-        Serial.println(vars.freqStart);
+        Serial.print(vars.freqStart/M/commMult);
+        Serial.println(F(" MHz."));
         Serial.print(F("Ending frequency is: "));
-        Serial.println(vars.freqStop);
+        Serial.print(vars.freqStop/M/commMult);
+        Serial.println(F(" MHz."));
         unsigned long scanStepSize = (vars.freqStop-vars.freqStart)/vars.numSteps;
         Serial.print(F("A step size of "));
-        Serial.print(scanStepSize);
+        Serial.print(scanStepSize/commMult);
         Serial.print(F("Hz for"));
         Serial.print(vars.numSteps);
         Serial.println(F(" total number of steps."));
@@ -388,7 +393,8 @@ void spectroscopy(variableRegisterArray& vars, int triggerpin, int readypin)
             int counter = 0;
             int triggervalue;
             Serial.print(F("Current frequency: "));
-            Serial.println(currentFreq);
+            Serial.print(currentFreq/M/commMult);
+            Serial.println(F(" MHz."));
             while(counter < vars.runsPerStep)
             {
                 //I may replace a good portion of this code with interrupts instead. This would allow the counter and sweeps to happen even if reading serial *by pausing serial reading*
