@@ -7,13 +7,14 @@ Created on Wed Apr 29 14:01:54 2020
 
 
 import sys
-from PySide2.QtWidgets import QApplication, QMainWindow
+from PySide2.QtWidgets import QApplication, QMainWindow, QSystemTrayIcon
 from PySide2.QtCore import QFile, Signal, QThread
 from PySide2 import QtGui
 from ui_mainwindow import Ui_MainWindow
 import serial
 import queue
 import time
+import ctypes
 
 
 from ArduinoCommWithIndividualCommands import *
@@ -97,8 +98,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.COM_Input.setText('/dev/tty.usbmodem14101')
-        # self.fromArduinoQueue = queue.Queue()
+        self.ui.COM_Input.setText('COM3')#for my mac: '/dev/tty.usbmodem14101'
         
 
         
@@ -643,7 +643,11 @@ if __name__ == "__main__":
     if app is None:
         # Create the Qt Application if it doesn't exist
         app = QApplication(sys.argv)
+    # trayIcon = QSystemTrayIcon(QtGui.QIcon('ion.ico'), parent = app)
+    # trayIcon.show()
     app.setWindowIcon(QtGui.QIcon('ion.jpg'))
+    myappid = 'AD9910ArduinoGui' # arbitrary string
+    ctypes.windll.shell32.SetCurrentProcessExplicitAppUserModelID(myappid)
     window = MainWindow()
     window.show()
     sys.exit(app.exec_())
