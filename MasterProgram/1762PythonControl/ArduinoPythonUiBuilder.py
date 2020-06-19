@@ -7,9 +7,9 @@ Created on Wed Apr 29 14:01:54 2020
 
 
 import sys
+from PySide2 import QtGui
 from PySide2.QtWidgets import QApplication, QMainWindow, QSystemTrayIcon
 from PySide2.QtCore import QFile, Signal, QThread
-from PySide2 import QtGui
 from ui_mainwindow import Ui_MainWindow
 import serial
 import queue
@@ -98,7 +98,7 @@ class MainWindow(QMainWindow):
         super(MainWindow, self).__init__()
         self.ui = Ui_MainWindow()
         self.ui.setupUi(self)
-        self.ui.COM_Input.setText('COM3')#for my mac: '/dev/tty.usbmodem14101'
+        self.ui.COM_Input.setText('COM12')#for my mac: '/dev/tty.usbmodem14101'
         
 
         

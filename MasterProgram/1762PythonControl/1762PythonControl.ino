@@ -36,7 +36,7 @@ unsigned long intervalmult = 1;
 # define sclk 13
 # define mrst 4
 # define sTrig 5
-# define CLOCKSPEED 16000000
+//# define CLOCKSPEED 16000000
 ///Calling AD9910 Class, naming DDS////////
 AD9910 DDS(cs, rst, update, sdio, sclk, mrst, sTrig);
 ////amplitude on a 0-1 scale of DDS output/////
@@ -58,18 +58,22 @@ int OSKpin = 8;
 
 //Setup serial comms, spi comms, inilize AD9910, setup pins for led and ttl communications.
 void setup() {
+  Serial.begin(115200);
   pinMode(LED1, OUTPUT); // the onboard LED
   pinMode(LED2, OUTPUT);
-  pinMode(LED3, OUTPUT);
-  pinMode(triggerpin, INPUT_PULLUP);
-
+  pinMode(OSKpin, OUTPUT);
+  pinMode(triggerpin, INPUT);//pinMode(triggerpin, INPUT_PULLUP);
+  pinMode(6, OUTPUT);
   SPI.begin();
   DDS.begin();
-  DDS.setAmpScaleFactor(1.0);
-  DDS.OSKenable(0);
-  DDS.freqSweepMode(1);
-
-  Serial.begin(115200);
+  DDS.setAmpScaleFactor(72); //DO NOT CHANGE WITHOUT CHECKIGN OUTPUT BEFORE PUTTING IT AMPLIFIER
+  DDS.OSKenable(0); //temporarily turning off output shift keying
+  //DDS.OSKdisable();
+//  DDS.OSKenable(0);
+  //DDS.freqSweepMode(1);
+  DDS.singleFreqMode();
+  DDS.set_freq(400000000,0);
+  digitalWrite(6, LOW);
   debugToPC("Arduino Ready");
 }
 
@@ -85,7 +89,7 @@ void loop() {
    *  (though maybe we can allow variables to be redefined using interrupts.. such that a TTL for instance will trigger the proper mode functionality.)
    * 
    */
-  static variableRegisterArray vars = {0x01, true, 256}; //Initial array that contains information about current mode, sub modes, and a variable... very simplistic right now.
+  static variableRegisterArray vars = {0x04, true, 256}; //Initial array that contains information about current mode, sub modes, and a variable... very simplistic right now.
   static bool initilize = true;
   if (initilize == true)
   {
@@ -100,15 +104,15 @@ void loop() {
       initilize = false;
   }
   varUpdate(vars);
-  digitalWrite(LED3,LOW);
-  delay(10);
+  //digitalWrite(LED3,LOW);
+  //delay(10);
   MODE1(vars);
-  digitalWrite(LED3, HIGH);
-  delay(10);
-  digitalWrite(LED3, LOW);
+  //digitalWrite(LED3, HIGH);
+  //delay(10);
+  //digitalWrite(LED3, LOW);
   MODE2(vars);
-  digitalWrite(LED3,HIGH);
-  delay(10);
+  //digitalWrite(LED3,HIGH);
+  //delay(10);
   SweepScan(vars, triggerpin, readypin);
   singleFreq(vars);
   spectroscopy(vars, triggerpin, readypin);
@@ -236,7 +240,7 @@ void SweepScan(variableRegisterArray& vars, int triggerpin, int readypin)
         //print information about where the sweep will be going from
         printStartStopSweep(limits);
         //for loop to step through sweep rates
-        for (int i = 0; i < vars.numSteps; i++)
+        for (int i = 0; i < vars.numSteps+1; i++)
         {
             if (vars.mode != SweepScanMode)//exit out if mode has been changed over serial
             {
@@ -337,8 +341,10 @@ void singleFreq(variableRegisterArray& vars)
         Serial.println(F(" MHz"));
         DDS.singleFreqMode();//SET DDS to single frequency mode
         //NEED TO ADD PROFILE PIN STUFF OR HARDWIRE PINS
+        bool justEntered = true;
         while(vars.mode == singleFreqMode)
         {
+            digitalWrite(6, LOW);
             if(vars.outputStateSF == true)
             {
                 digitalWrite(OSKpin, HIGH);
@@ -349,12 +355,13 @@ void singleFreq(variableRegisterArray& vars)
             }
             unsigned long currentFreq = vars.frequency;
             varUpdate(vars);
-            if(vars.frequency != currentFreq)
+            if((vars.frequency != currentFreq) or (justEntered == true))
             {
                 DDS.set_freq(vars.frequency, 0);
                 Serial.print(F("Frequency changed to: "));
                 Serial.print(vars.frequency/M/commMult,5); //Factor of 10 is to compensate for being in units of 0.1 Hz as opposed to Hz.
                 Serial.println(F(" MHz."));
+                justEntered = false;
             }
             
         }
@@ -379,42 +386,45 @@ void spectroscopy(variableRegisterArray& vars, int triggerpin, int readypin)
         unsigned long scanStepSize = (vars.freqStop-vars.freqStart)/vars.numSteps;
         Serial.print(F("A step size of "));
         Serial.print(scanStepSize/commMult);
-        Serial.print(F("Hz for"));
+        Serial.print(F(" Hz for"));
         Serial.print(vars.numSteps);
         Serial.println(F(" total number of steps."));
-        for(unsigned long i = 0;  i < vars.numSteps; i++)
+
+        digitalWrite(OSKpin, HIGH);
+        
+        for(unsigned long i = 0;  i < vars.numSteps+2; i++)
         {
             if (vars.mode != spectroscopyMode)//exit out if mode has been changed over serial
             {
                 return;
             }
-            unsigned long currentFreq = vars.freqStart + i * scanStepSize;
+            unsigned long currentFreq = vars.freqStart + (i-1) * scanStepSize;//Expecting a trigger to begin with, so we will start at a frequency before what we want
             DDS.set_freq(currentFreq, 0);
             int counter = 0;
             int triggervalue;
-            Serial.print(F("Current frequency: "));
-            Serial.print(currentFreq/M/commMult);
-            Serial.println(F(" MHz."));
+//            Serial.print(F("Current frequency: "));
+//            Serial.print(currentFreq/M/commMult);
+//            Serial.println(F(" MHz."));
             while(counter < vars.runsPerStep)
             {
                 //I may replace a good portion of this code with interrupts instead. This would allow the counter and sweeps to happen even if reading serial *by pausing serial reading*
                 triggervalue = digitalRead(triggerpin);
-                if (triggervalue == LOW) //this loop simply counts a number of triggers (triggering low)
+                if (triggervalue == HIGH) //this loop simply counts a number of triggers (triggering low)
                 {
                     counter = counter + 1;
                     //Need to put in code to turn on and off the AOM output. Probably using OSK pin.
-                    delay(100); //Delay since currently using a button.
-                    digitalWrite(OSKpin, HIGH);
-                    delayMicroseconds(vars.pulseTime);
-                    digitalWrite(OSKpin, LOW);
-                    digitalWrite(readypin, LOW); //turn off led to show that trigger occured
-                    Serial.print(F("Run number at this frequency: "));
-                    Serial.println(counter); //print over serial what trigger number we are at.
+//                    delay(100); //Delay since currently using a button.
+//                    digitalWrite(OSKpin, HIGH);
+//                    delayMicroseconds(vars.pulseTime);
+//                    digitalWrite(OSKpin, HIGH); //For testing purposes set this high. NEED TO SET LOW if you want arduino to do the pulsing, as opposed to an external box.
+//                    digitalWrite(readypin, LOW); //turn off led to show that trigger occured
+//                    Serial.print(F("Run number at this frequency: "));
+//                    Serial.println(counter); //print over serial what trigger number we are at.
                 }
                 else
                 {
                     varUpdate(vars);
-                    digitalWrite(readypin, HIGH);//read and implement any changes have been made over serial
+//                    digitalWrite(readypin, HIGH);//read and implement any changes have been made over serial
                 }
                 if (vars.mode != spectroscopyMode)//exit out if mode has been changed over serial.
                 {
