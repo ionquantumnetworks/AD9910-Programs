@@ -63,10 +63,10 @@ void setup() {
   pinMode(LED2, OUTPUT);
   pinMode(OSKpin, OUTPUT);
   pinMode(triggerpin, INPUT);//pinMode(triggerpin, INPUT_PULLUP);
-  pinMode(6, OUTPUT);
+  pinMode(6, OUTPUT); // This is currently tied to PO
   SPI.begin();
   DDS.begin();
-  DDS.setAmpScaleFactor(72); //DO NOT CHANGE WITHOUT CHECKIGN OUTPUT BEFORE PUTTING IT AMPLIFIER
+  DDS.setAmpScaleFactor(100); //DO NOT CHANGE WITHOUT CHECKIGN OUTPUT BEFORE PUTTING IT AMPLIFIER
   DDS.OSKenable(0); //temporarily turning off output shift keying
   //DDS.OSKdisable();
 //  DDS.OSKenable(0);
@@ -113,7 +113,9 @@ void loop() {
   MODE2(vars);
   //digitalWrite(LED3,HIGH);
   //delay(10);
-  SweepScan(vars, triggerpin, readypin);
+  //SweepScan2(vars, triggerpin, readypin);
+  SweepScan3(vars, triggerpin, readypin);
+  //SweepScanAlwaysOn(vars, triggerpin, readypin);
   singleFreq(vars);
   spectroscopy(vars, triggerpin, readypin);
 }
@@ -234,6 +236,7 @@ void SweepScan(variableRegisterArray& vars, int triggerpin, int readypin)
         double sweepStepTime = 8 * ns;
         //Let the user know what the step size is
         Serial.print(F("Scan step size is: "));
+        Serial.print(scanStepSize);
         Serial.print(scanStepSize*ms/M);
         Serial.println(F(" MHz/ms"));
         Serial.println(F("-----------------------"));
@@ -313,9 +316,10 @@ void repeatedTrigSweep(int runs, boolean repeat, variableRegisterArray& vars, in
             //right now just set up for at-home testing.
             digitalWrite(OSKpin, HIGH);
             digitalWrite(sTrig, HIGH);
-            delay(50);
+            //delay(1000);
             digitalWrite(sTrig, LOW);
-            digitalWrite(OSKpin, LOW);
+            delay(1000);
+            //digitalWrite(OSKpin, LOW);
         }
         else
         {
@@ -329,6 +333,277 @@ void repeatedTrigSweep(int runs, boolean repeat, variableRegisterArray& vars, in
     }
 }
 
+void SweepScan2(variableRegisterArray& vars,int triggerpin, int readypin) //For testing purposes
+{
+  if(vars.mode == SweepScanMode)
+  {
+    Serial.println(F("Entering freq sweep scan mode."));
+    digitalWrite(sTrig, LOW); //Make sure a sweep wont trigger immediately.
+    //DDS.freqSweepParameters(vars.sweepCenterFrequency+vars.sweepSpan/2,vars.sweepCenterFrequency-vars.sweepSpan/2,vars.sweepSpan/1000000000,vars.sweepSpan/1000000000,0.000000008,0.000000008);
+    //DDS.freqSweepParameters(vars.sweepCenterFrequency+vars.sweepSpan/2,vars.sweepCenterFrequency-vars.sweepSpan/2,2,2,0.000000008,0.000000008);
+    //DDS.freqSweepParameters(1000000000,100000000,2,10*.2,0.000000008,0.000000008);
+    DDS.freqSweepParameters(vars.sweepUpperBound,vars.sweepLowerBound,8,8,0.000000008,0.000000008);
+    Serial.print(F("Target Sweep Rate Start: "));
+    Serial.println(vars.sweepRateStart);
+    Serial.print(F("Upper Bound: "));
+    Serial.println(vars.sweepUpperBound);
+    Serial.print(F("Lower Bound: "));
+    Serial.println(vars.sweepLowerBound);
+    Serial.print(F("Freq per step: "));
+    Serial.println(vars.sweepSpan/1000000000);
+    DDS.freqSweepMode(1);
+    digitalWrite(OSKpin, HIGH);
+    while(vars.mode == SweepScanMode){
+      digitalWrite(sTrig,HIGH);
+      digitalWrite(sTrig,LOW);
+      varUpdate(vars);
+      delay(20);
+    }
+    } 
+  }
+
+void SweepScan3(variableRegisterArray& vars,int triggerpin, int readypin)
+{
+  if(vars.mode == SweepScanMode)
+  {
+    unsigned long currentRate;
+    unsigned long stepSize;
+    unsigned long scanStepSize;
+    unsigned long sweepSpan;
+    double sweepTime;
+    unsigned long sweepTimeMilli;
+    unsigned long sweepTimeMicro;
+    unsigned long tempSweepTime;
+    unsigned long adjustmentTime = 4; //To make pulses correct length
+    Serial.println(F("Entering freq sweep scan mode."));
+    digitalWrite(sTrig, LOW); //Make sure a sweep wont trigger immediately.
+    Serial.print(F("Target Sweep Rate Start: "));
+    Serial.println(vars.sweepRateStart);
+    Serial.print(F("Target Sweep Rate Stop: "));
+    Serial.println(vars.sweepRateStop);
+    Serial.print(F("Upper Bound: "));
+    Serial.println(vars.sweepUpperBound);
+    Serial.print(F("Lower Bound: "));
+    Serial.println(vars.sweepLowerBound);
+    scanStepSize = (vars.sweepRateStop-vars.sweepRateStart)/vars.numSteps; //Max stop rate is 10^9 Hz/s //Units are Hz/s even though python program labeled as MHz/ms
+    sweepSpan = vars.sweepUpperBound-vars.sweepLowerBound;
+    DDS.freqSweepMode(1);
+    digitalWrite(OSKpin, LOW); //Might make this low
+    for (unsigned long i = 0; i < vars.numSteps; i++)
+    {
+      if (vars.mode != SweepScanMode)//exit out if mode has been changed over serial
+      {
+        return;
+        }
+     DDS.singleFreqMode();
+     delay(10);
+     DDS.freqSweepMode(1);
+     delay(10);
+     currentRate = vars.sweepRateStart + (i) * scanStepSize;//Expecting a trigger to begin with, so we will start at a frequency before what we want
+     stepSize = ((currentRate/100)*8)/10000; //Factor of 10 for units of 0.1 Hz, Factor of 10^9 for 8 ns ((currentRate/1000)*8)/100000;
+     sweepTime = sweepSpan/stepSize*0.000000008;// /1000000000;
+     //Serial.println(sweepSpan);
+     Serial.print(F("current sweep rate (Hz/s): "));
+     Serial.println(currentRate);
+     Serial.print(F("Sweep Step Size (Hz/10): ")); 
+     Serial.println(stepSize);
+     Serial.print(F("Time to sweep (ms): "));
+     Serial.println(sweepTime*1000,6);
+     if (stepSize < 2)
+     {
+      Serial.println(F("Step size under 0.2 Hz. Setting to 0.2 Hz"));
+      stepSize = 2;
+      //Serial.println(stepSize);
+      }
+     DDS.freqSweepParameters(vars.sweepUpperBound,vars.sweepLowerBound,stepSize,stepSize,0.000000008,0.000000008);
+     delay(10);
+     int counter = 0;
+     int triggervalue;
+     sweepTimeMilli=(unsigned long)(sweepTime*1000);
+     sweepTimeMicro= (unsigned long)((sweepTime*1000-(double)(sweepTimeMilli))*1000);
+     while (counter < vars.runsPerStep)//Without being triggered this whole loop takes around 22 us, 17 of which is not the ready pin 
+     {
+      triggervalue = digitalRead(triggerpin);
+      varUpdate(vars);
+      if(triggervalue == HIGH)
+      {
+        digitalWrite(readypin,LOW);
+        counter = counter + 1;
+        //Serial.println(counter);
+        if (sweepTime*1000 >= 1)
+        {
+          digitalWrite(sTrig,HIGH);
+          digitalWrite(OSKpin, HIGH);
+          //delay(sweepTime*1000);
+          delay(sweepTimeMilli);
+          delayMicroseconds(sweepTimeMicro);
+          digitalWrite(OSKpin,LOW);
+          digitalWrite(sTrig,LOW);
+          delay(1);
+          }
+        else
+        {
+          tempSweepTime = (unsigned long)(sweepTime*1000000)-adjustmentTime;
+          if(tempSweepTime > 2000)
+          {
+            tempSweepTime = 0;
+            }
+          digitalWrite(sTrig,HIGH);
+          digitalWrite(OSKpin, HIGH);
+          delayMicroseconds(tempSweepTime);
+          //delayMicroseconds((int)(sweepTime*1000000));
+          //Serial.println((int)(sweepTime*1000000));
+          digitalWrite(OSKpin,LOW);
+          digitalWrite(sTrig,LOW);
+          //Serial.println(tempSweepTime);
+          delay(1);
+          }
+
+        }
+      else
+      {
+        varUpdate(vars);
+        digitalWrite(readypin,HIGH); //THIS TAKES AROUND 5 us
+        //delayMicroseconds(5);
+        digitalWrite(readypin,LOW);
+        }
+      if (vars.mode != SweepScanMode)
+      {
+        return;
+        }
+      }
+     }
+    } 
+  }
+
+void SweepScanAlwaysOn(variableRegisterArray& vars,int triggerpin, int readypin)
+{
+  if(vars.mode == SweepScanMode)
+  {
+    unsigned long currentRate;
+    unsigned long stepSize;
+    unsigned long scanStepSize;
+    unsigned long sweepSpan;
+    double sweepTime;
+    unsigned long sweepTimeMilli;
+    unsigned long sweepTimeMicro;
+    unsigned long tempSweepTime;
+    unsigned long adjustmentTime = 4; //To make pulses correct length
+    unsigned long startFrequency = 100000000; //to be far off resonance with AOM
+    Serial.println(F("Entering freq sweep scan mode."));
+    digitalWrite(sTrig, LOW); //Make sure a sweep wont trigger immediately.
+    Serial.print(F("Target Sweep Rate Start: "));
+    Serial.println(vars.sweepRateStart);
+    Serial.print(F("Target Sweep Rate Stop: "));
+    Serial.println(vars.sweepRateStop);
+    Serial.print(F("Upper Bound: "));
+    Serial.println(vars.sweepUpperBound);
+    Serial.print(F("Lower Bound: "));
+    Serial.println(vars.sweepLowerBound);
+    scanStepSize = (vars.sweepRateStop-vars.sweepRateStart)/vars.numSteps; //Max stop rate is 10^9 Hz/s //Units are Hz/s even though python program labeled as MHz/ms
+    sweepSpan = vars.sweepUpperBound-vars.sweepLowerBound;
+    DDS.freqSweepMode(1);
+    digitalWrite(OSKpin, HIGH); //Might make this low
+    for (unsigned long i = 0; i < vars.numSteps; i++)
+    {
+      if (vars.mode != SweepScanMode)//exit out if mode has been changed over serial
+      {
+        return;
+        }
+     DDS.singleFreqMode();
+     delay(10);
+     DDS.freqSweepMode(1);
+     delay(10);
+     digitalWrite(OSKpin, HIGH);
+     currentRate = vars.sweepRateStart + (i) * scanStepSize;//Expecting a trigger to begin with, so we will start at a frequency before what we want
+     stepSize = ((currentRate/100)*8)/10000; //Factor of 10 for units of 0.1 Hz, Factor of 10^9 for 8 ns ((currentRate/1000)*8)/100000;
+     sweepTime = sweepSpan/stepSize*0.000000008;// /1000000000;
+     //Serial.println(sweepSpan);
+     Serial.print(F("current sweep rate (Hz/s): "));
+     Serial.println(currentRate);
+     Serial.print(F("Sweep Step Size (Hz/10): ")); 
+     Serial.println(stepSize);
+     Serial.print(F("Time to sweep (ms): "));
+     Serial.println(sweepTime*1000,6);
+     if (stepSize < 2)
+     {
+      Serial.println(F("Step size under 0.2 Hz. Setting to 0.2 Hz"));
+      stepSize = 2;
+      //Serial.println(stepSize);
+      }
+     //DDS.freqSweepParameters(vars.sweepUpperBound,vars.sweepLowerBound,stepSize,stepSize,0.000000008,0.000000008);
+     DDS.freqSweepParameters(vars.sweepUpperBound,startFrequency,stepSize,stepSize,0.000000008,0.000000008);
+     delay(10);
+     int counter = 0;
+     int triggervalue;
+     sweepTimeMilli=(unsigned long)(sweepTime*1000);
+     sweepTimeMicro= (unsigned long)((sweepTime*1000-(double)(sweepTimeMilli))*1000);
+     double startTime = (vars.sweepLowerBound-startFrequency)*0.000000008/(stepSize);
+     unsigned long startTimeMilli = (unsigned long)(startTime*1000);
+     unsigned long startTimeMicro = (unsigned long)((startTime*1000-(double)(startTimeMilli))*1000);
+     while (counter < vars.runsPerStep)//Without being triggered this whole loop takes around 22 us, 17 of which is not the ready pin 
+     {
+      triggervalue = digitalRead(triggerpin);
+      varUpdate(vars);
+      if(triggervalue == HIGH)
+      {
+        digitalWrite(readypin,LOW);
+        counter = counter + 1;
+        //Serial.println(counter);
+        if (sweepTime*1000 >= 1)
+        {
+          digitalWrite(OSKpin,LOW);
+          digitalWrite(sTrig,HIGH);
+          delay(startTimeMilli);
+          delayMicroseconds(startTimeMicro);
+          digitalWrite(OSKpin, HIGH);
+          //delay(sweepTime*1000);
+          delay(sweepTimeMilli);
+          delayMicroseconds(sweepTimeMicro);
+          digitalWrite(OSKpin,LOW);
+          digitalWrite(sTrig,LOW);
+          delay(1);
+          digitalWrite(OSKpin,HIGH);
+          }
+        else
+        {
+          tempSweepTime = (unsigned long)(sweepTime*1000000)-adjustmentTime;
+          if(tempSweepTime > 2000)
+          {
+            tempSweepTime = 0;
+            }
+          digitalWrite(OSKpin,LOW);
+          digitalWrite(sTrig,HIGH);
+          delay(startTimeMilli);
+          delayMicroseconds(startTimeMicro);
+          digitalWrite(OSKpin, HIGH);
+          delayMicroseconds(tempSweepTime);
+          //delayMicroseconds((int)(sweepTime*1000000));
+          //Serial.println((int)(sweepTime*1000000));
+          digitalWrite(OSKpin,LOW);
+          digitalWrite(sTrig,LOW);
+          //Serial.println(tempSweepTime);
+          delay(1);
+          digitalWrite(OSKpin,HIGH);
+          }
+
+        }
+      else
+      {
+        varUpdate(vars);
+        digitalWrite(readypin,HIGH); //THIS TAKES AROUND 5 us
+        //delayMicroseconds(5);
+        digitalWrite(readypin,LOW);
+        }
+      if (vars.mode != SweepScanMode)
+      {
+        return;
+        }
+      }
+     }
+    } 
+  }
+
 //==================================================================
 //Need to write these functions still
 void singleFreq(variableRegisterArray& vars)
@@ -340,7 +615,7 @@ void singleFreq(variableRegisterArray& vars)
         Serial.print(vars.frequency/M/commMult);
         Serial.println(F(" MHz"));
         DDS.singleFreqMode();//SET DDS to single frequency mode
-        //NEED TO ADD PROFILE PIN STUFF OR HARDWIRE PINS
+        //NEED TO ADD PROFILE PIN STUFF OR HARDWIRE PINS - Went with hardwiring for now.
         bool justEntered = true;
         while(vars.mode == singleFreqMode)
         {

@@ -71,11 +71,11 @@ class MainWindow(QMainWindow):
     sweepUpperBoundInit = 41000000;
     sweepLowerboundInit = 39000000;
     sweepCenterFrequencyInit = 40000000;
-    sweepRateInit = 100000000;
+    sweepRateInit = 10;
     sweepSpanInit = 1000000;
     #frequency sweep scan specific paramters
-    sweepRateStartInit = 100000000;
-    sweepRateStopInit = 1000000000;        
+    sweepRateStartInit = 0.1; #100000000;
+    sweepRateStopInit = 1; #1000000000;        
     
     #single frequency mode
     frequencyInit = 40000000;
@@ -93,6 +93,7 @@ class MainWindow(QMainWindow):
     #################################################
     #communication multiplier - AD9910 library wants frequency to be given in units of 0.1 Hz to allow for max precision, but we need to communicate in integers
     commMultiplier = 10;
+    sweepMultiplier = 1000000;
     
     def __init__(self):
         super(MainWindow, self).__init__()
@@ -289,10 +290,10 @@ class MainWindow(QMainWindow):
         self.ui.SweepUpperBoundQLCD.display(MakeHumanReadable(self.variableArray[self.sweepUpperBound],self.ui.SweepUpperBoundUnitComboBox.currentText()))
         self.ui.SweepLowerBoundQLCD.display(MakeHumanReadable(self.variableArray[self.sweepLowerBound],self.ui.SweepLowerBoundUnitComboBox.currentText()))
         self.ui.SweepCenterFreqQLCD.display(MakeHumanReadable(self.variableArray[self.sweepCenterFrequency],self.ui.SweepCenterFreqUnitComboBox.currentText()))
-        self.ui.SweepRateQLCD.display(self.variableArray[self.sweepRate])
+        self.ui.SweepRateQLCD.display(MakeHumanReadable(self.variableArray[self.sweepRate],"Sweep"))
         self.ui.SweepSpanQLCD.display(MakeHumanReadable(self.variableArray[self.sweepSpan],self.ui.SweepSpanUnitComboBox.currentText()))
-        self.ui.SweepRateStartQLCD.display(self.variableArray[self.sweepRateStart])
-        self.ui.SweepRateStopQLCD.display(self.variableArray[self.sweepRateStop])
+        self.ui.SweepRateStartQLCD.display(MakeHumanReadable(self.variableArray[self.sweepRateStart],"Sweep"))
+        self.ui.SweepRateStopQLCD.display(MakeHumanReadable(self.variableArray[self.sweepRateStop],"Sweep"))
         
     def modeSelectResult(self):
         if(self.ui.ModeSelectDropDown.currentText() == "Single Frequency"):
@@ -327,6 +328,8 @@ class MainWindow(QMainWindow):
             unit = 1000
         elif unitTxt == "Hz":
             unit = 1
+        elif unitTxt == "Sweep":
+            unit = 10
         
         #calculate number in front of decimal
         b4dec = int(temp[0]) * unit
@@ -362,10 +365,10 @@ class MainWindow(QMainWindow):
             tempArray[self.sweepUpperBound] = self.HumanVarInputConvert(self.ui.SweepUpperBoundQLineEdit.text(),self.ui.SweepUpperBoundUnitComboBox.currentText())
             tempArray[self.sweepLowerBound] = self.HumanVarInputConvert(self.ui.SweepLowerBoundQLineEdit.text(),self.ui.SweepLowerBoundUnitComboBox.currentText())
             tempArray[self.sweepCenterFrequency] = self.HumanVarInputConvert(self.ui.SweepCenterFreqQLineEdit.text(),self.ui.SweepCenterFreqUnitComboBox.currentText())
-            tempArray[self.sweepRate] = self.HumanVarInputConvert(self.ui.SweepRateQLineEdit.text())
+            tempArray[self.sweepRate] = self.HumanVarInputConvert(self.ui.SweepRateQLineEdit.text(), "Sweep")
             tempArray[self.sweepSpan] = self.HumanVarInputConvert(self.ui.SweepSpanQLineEdit.text(),self.ui.SweepSpanUnitComboBox.currentText())
-            tempArray[self.sweepRateStart] = self.HumanVarInputConvert(self.ui.SweepRateStartQLineEdit.text())
-            tempArray[self.sweepRateStop] = self.HumanVarInputConvert(self.ui.SweepRateStopQLineEdit.text())
+            tempArray[self.sweepRateStart] = self.HumanVarInputConvert(self.ui.SweepRateStartQLineEdit.text(), "Sweep")
+            tempArray[self.sweepRateStop] = self.HumanVarInputConvert(self.ui.SweepRateStopQLineEdit.text(), "Sweep")
             tempArray[self.outputStateSF] = int(self.ui.OutputONCheckbox.isChecked()) #just for now need to put a button in.
             tempArray[self.interval] = int(110)
         except ValueError:
@@ -386,6 +389,7 @@ class MainWindow(QMainWindow):
         global ArduinoQueue
         if serial_open == True:
             tempArray = self.updateVarTempArray(self.variableArray)
+            print(tempArray)
             for i in range(self.varNum):
                 #check if variable has been changed
                 responseRcvd = False
@@ -423,6 +427,9 @@ class MainWindow(QMainWindow):
                         try:
                             if i in [self.frequency, self.freqStart, self.freqStop, self.sweepUpperBound, self.sweepLowerBound, self.sweepCenterFrequency, self.sweepSpan]:
                                 msgArray = bytearray(self.varchange.to_bytes(1,'big')) + bytearray(i.to_bytes(1,'big')) + bytearray((tempArray[i]*self.commMultiplier).to_bytes(4,'big'))
+                            elif i in [self.sweepRateStart,self.sweepRateStop,self.sweepRate]:
+                                msgArray = bytearray(self.varchange.to_bytes(1,'big')) + bytearray(i.to_bytes(1,'big')) + bytearray((tempArray[i]*self.sweepMultiplier).to_bytes(4,'big'))
+                                print(msgArray)
                             else:
                                 msgArray = bytearray(self.varchange.to_bytes(1,'big')) + bytearray(i.to_bytes(1,'big')) + bytearray((tempArray[i]).to_bytes(4,'big'))
                             okToSend = True
@@ -636,6 +643,9 @@ def MakeHumanReadable(val, unitSelect = "Hz"):
         return outputVal
     if unitSelect == "MHz":
         outputVal = val/1000000
+        return outputVal
+    if unitSelect == "Sweep":
+        outputVal = val/10
         return outputVal
 
 ArduinoQueue=queue.Queue()
